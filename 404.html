@@ -1,55 +1,346 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Redirecting...</title>
-  </head>
-  <body>
-    <p>Redirecting...</p>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting - OtakuGamerAds</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0f3460;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            grid-template-areas:
+                "header"
+                "main"
+                "footer";
+        }
+
+        /* Header */
+        header {
+            grid-area: header;
+            background: #16213e;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #e94560, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Main Grid Layout */
+        main {
+            grid-area: main;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 1rem;
+            padding: 1rem;
+            max-width: 100%;
+            height: 100%;
+        }
+
+        /* Ad Slots */
+        .ad-slot {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed #666;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-weight: bold;
+            min-height: 250px;
+        }
+
+        .ad-sidebar {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ad-sidebar .ad-slot {
+            flex-grow: 1;
+        }
+
+        /* Center Content */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            background: rgba(22, 33, 62, 0.5);
+            border-radius: 16px;
+        }
+
+        /* Footer */
+        footer {
+            grid-area: footer;
+            background: #16213e;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Countdown Style */
+        .countdown-container {
+            margin-bottom: 2rem;
+        }
+
+        .countdown-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid #e94560;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #e94560;
+            margin: 0 auto 1rem;
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .status-text {
+            font-size: 1.2rem;
+            color: #b0b0b0;
+        }
+
+        /* Continue Button */
+        .continue-btn {
+            background: #2ecc71;
+            color: #fff;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: none; /* Hidden by default */
+            animation: pulse 2s infinite;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .continue-btn:active {
+            transform: translateY(1px);
+        }
+
+        .home-btn {
+            background: #e94560;
+            color: #fff;
+            text-decoration: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(46, 204, 113, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 2rem;
+            }
+
+            .ad-sidebar {
+                height: 250px; /* Fixed height for stacked ads */
+            }
+
+            /* Order: Content first, then ads */
+            .content-area {
+                order: 1;
+            }
+            .left-sidebar {
+                order: 2;
+            }
+            .right-sidebar {
+                order: 3;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">OtakuGamerAds</div>
+    </header>
+
+    <main>
+        <!-- Left Sidebar Ad -->
+        <aside class="ad-sidebar left-sidebar">
+            <div class="ad-slot">Advertisement Space</div>
+        </aside>
+
+        <!-- Center Content -->
+        <section class="content-area">
+            <!-- Loading State (Initial) -->
+            <div id="loading-state">
+                <p>Verifying link...</p>
+            </div>
+
+            <!-- Timer State -->
+            <div id="timer-state" class="hidden">
+                <div class="countdown-circle" id="countdown">5</div>
+                <p class="status-text" id="status-text">Please wait...</p>
+                <br>
+                <!-- Top Ad Slot (Mobile/Desktop Content Ad) -->
+                <div class="ad-slot" style="width: 100%; height: 100px; max-width: 400px; min-height: 100px; margin: 1rem auto;">
+                    Ad Space
+                </div>
+            </div>
+
+            <!-- Button State -->
+            <button id="continue-btn" class="continue-btn">CONTINUE &rarr;</button>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden">
+                <h2 style="color: #e94560; margin-bottom: 1rem;">Link Expired or Invalid</h2>
+                <p>The link you are trying to reach does not exist.</p>
+                <a href="/redirect/index.html" class="home-btn" id="home-link">Go Home</a>
+            </div>
+        </section>
+
+        <!-- Right Sidebar Ad -->
+        <aside class="ad-sidebar right-sidebar">
+            <div class="ad-slot">Advertisement Space</div>
+        </aside>
+    </main>
+
+    <footer>
+        &copy; 2026 OtakuGamerAds. All rights reserved.
+    </footer>
+
     <script>
-      (function () {
-        const repoName = "/redirect";
-        let path = window.location.pathname;
+        (function () {
+            const repoName = "/redirect"; // Adjust if deployed at root
+            let destUrl = null;
 
-        // Strip the repoName from the start of the path
-        if (path.startsWith(repoName)) {
-          path = path.substring(repoName.length);
-        }
+            // Elements
+            const loadingState = document.getElementById('loading-state');
+            const timerState = document.getElementById('timer-state');
+            const errorState = document.getElementById('error-state');
+            const continueBtn = document.getElementById('continue-btn');
+            const countdownEl = document.getElementById('countdown');
+            const statusTextEl = document.getElementById('status-text');
+            const homeLink = document.getElementById('home-link');
 
-        // Remove leading slash to get the slug
-        let slug = path.replace(/^\//, "");
+            // Set Home Link dynamically
+            homeLink.href = repoName + "/index.html";
 
-        // Remove trailing slashes
-        slug = slug.replace(/\/+$/, "");
-
-        // If slug is empty, redirect to home
-        if (!slug) {
-          window.location.replace(repoName + "/index.html");
-          return;
-        }
-
-        // Fetch links.json and redirect
-        fetch(repoName + "/links.json")
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Failed to fetch links.json");
+            // 1. Parse Slug
+            let path = window.location.pathname;
+            
+            // Normalize path for GitHub Pages
+            if (path.startsWith(repoName)) {
+                path = path.substring(repoName.length);
             }
-            return response.json();
-          })
-          .then((data) => {
-            if (data[slug]) {
-              window.location.replace(data[slug]);
-            } else {
-              // Slug not found, redirect to home
-              window.location.replace(repoName + "/index.html");
+            
+            let slug = path.replace(/^\//, "").replace(/\/+$/, "");
+
+            // If empty, redirect to home immediately? Or just show error?
+            // The prompt says "If slug is invalid... show message". Empty is effectively invalid for a redirector.
+            if (!slug) {
+                showError();
+                return;
             }
-          })
-          .catch((error) => {
-            console.error("Redirect error:", error);
-            window.location.replace(repoName + "/index.html");
-          });
-      })();
+
+            // 2. Fetch Links
+            fetch(repoName + "/links.json")
+                .then((response) => {
+                    if (!response.ok) throw new Error("Failed to fetch links.json");
+                    return response.json();
+                })
+                .then((data) => {
+                    if (data[slug]) {
+                        destUrl = data[slug];
+                        startCountdown();
+                    } else {
+                        showError();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Redirect error:", error);
+                    showError();
+                });
+
+            // Functions
+            function showError() {
+                loadingState.classList.add('hidden');
+                timerState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+            }
+
+            function startCountdown() {
+                loadingState.classList.add('hidden');
+                timerState.classList.remove('hidden');
+
+                let seconds = 5;
+                countdownEl.textContent = seconds;
+
+                const timer = setInterval(() => {
+                    seconds--;
+                    if (seconds > 0) {
+                        countdownEl.textContent = seconds;
+                    } else {
+                        clearInterval(timer);
+                        showButton();
+                    }
+                }, 1000);
+            }
+
+            function showButton() {
+                countdownEl.style.display = 'none'; // distinct from hidden class, just structure
+                statusTextEl.style.display = 'none';
+                continueBtn.style.display = 'block'; // Reveal button
+                
+                // Add click listener
+                continueBtn.addEventListener('click', () => {
+                   window.location.replace(destUrl);
+                });
+            }
+        })();
     </script>
-  </body>
+</body>
 </html>
