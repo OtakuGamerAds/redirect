@@ -9,22 +9,22 @@
     <style>
         /* Redirection Specific Styles */
         body {
-            /* Use new palette */
             background-color: var(--bg-color);
             color: var(--text-color);
-            display: grid;
-            grid-template-rows: auto 1fr;
-            min-height: 100vh;
+            height: 100dvh; /* Force full viewport height */
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling explicitly */
         }
 
         .redirect-layout {
             display: grid;
-            grid-template-rows: auto 1fr auto;
+            grid-template-rows: 15vh 1fr 15vh; /* Top Ad, Main Content, Bottom Ad */
             grid-template-areas: 
                 "top-ad"
                 "main"
                 "bottom-ad";
             height: 100%;
+            width: 100%;
         }
 
         .ad-banner {
@@ -32,14 +32,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1rem;
             width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
 
         .ad-banner-slot {
-            width: 100%;
-            max-width: 728px;
-            height: 90px;
+            width: 90%;
+            height: 80%;
             background: #ddd;
             display: flex;
             justify-content: center;
@@ -47,55 +47,87 @@
             border: 2px dashed #bbb;
             color: #666;
             font-weight: bold;
+            font-size: 1rem;
+            text-align: center;
         }
 
         .main-content {
             grid-area: main;
+            display: grid;
+            grid-template-columns: 20vw 1fr 20vw; /* Left Ad, Center, Right Ad */
+            width: 100%;
+            height: 100%;
+            align-items: center;
+        }
+
+        .side-ad {
+            background: #ddd;
+            border: 2px dashed #bbb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            width: 90%;
+            height: 90%;
+            margin: auto;
+            font-weight: bold;
+        }
+
+        .center-panel {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
             text-align: center;
+            padding: 1rem;
+            height: 100%;
+            overflow: hidden;
         }
 
         .countdown-circle {
-            width: 120px;
-            height: 120px;
+            width: 15vw;
+            height: 15vw;
+            min-width: 80px;
+            min-height: 80px;
+            max-width: 120px;
+            max-height: 120px;
             border-radius: 50%;
             border: 5px solid var(--primary-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 3rem;
+            font-size: 2rem;
             font-weight: bold;
             color: var(--primary-dark);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             background: var(--surface-color);
             box-shadow: var(--shadow-md);
         }
 
         .status-text {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: var(--text-color);
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             font-weight: bold;
         }
 
         .continue-btn {
             background-color: var(--primary-color);
             color: white;
-            padding: 1rem 3rem;
+            padding: 0.8rem 2rem;
             border-radius: 50px;
-            font-size: 1.25rem;
+            font-size: 1rem;
             font-weight: bold;
             text-decoration: none;
             box-shadow: var(--shadow-md);
             transition: all 0.3s ease;
-            display: none; /* Hidden by default */
+            display: none;
             border: none;
             cursor: pointer;
             animation: pulse 2s infinite;
+            white-space: nowrap;
         }
 
         .continue-btn:hover {
@@ -112,38 +144,21 @@
 
         .hidden { display: none !important; }
 
-        /* Sidebars for desktop */
-        @media (min-width: 1024px) {
-            .main-content {
-                display: grid;
-                grid-template-columns: 1fr 2fr 1fr;
-                gap: 2rem;
-                align-items: center;
-                max-width: 1400px;
-                margin: 0 auto;
-                width: 100%;
+        /* Media adjustments for better readability on very small screens if needed, 
+           but strict layout is enforced as requested */
+        @media (min-width: 768px) {
+            .countdown-circle {
+                font-size: 3rem;
+                width: 120px;
+                height: 120px;
             }
-            .center-panel {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
+            .status-text {
+                font-size: 1.5rem;
             }
-            .side-ad {
-                height: 600px;
-                width: 160px;
-                background: #ddd;
-                border: 2px dashed #bbb;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                margin: 0 auto;
-                color: #666;
-                writing-mode: vertical-rl;
-                text-orientation: mixed;
+            .continue-btn {
+                padding: 1rem 3rem;
+                font-size: 1.25rem;
             }
-        }
-        @media (max-width: 1023px) {
-            .side-ad { display: none; }
         }
     </style>
 </head>
