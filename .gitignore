@@ -1,0 +1,7 @@
+
+# Agent artifacts
+.agent/
+.gemini/
+.idea/
+.vscode/
+*.log
