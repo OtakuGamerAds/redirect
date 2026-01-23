@@ -14,6 +14,10 @@ async function loadConfig() {
         
         populateContent(data);
         generateNav(data.nav, isPagesDir);
+        
+        if (window.location.pathname.includes('roblox.html')) {
+            loadRobloxMaps(isPagesDir);
+        }
     } catch (error) {
         console.error('Error loading site data:', error);
     }
@@ -163,5 +167,63 @@ function generateNav(navItems, isPagesDir) {
                 navList.style.boxShadow = 'var(--shadow-md)';
             }
         });
+    }
+}
+
+async function loadRobloxMaps(isPagesDir) {
+    const grid = document.getElementById('maps-grid');
+    if (!grid) return;
+    
+    try {
+        const configPath = isPagesDir ? '../config/links.json' : 'config/links.json';
+        const response = await fetch(configPath);
+        if (!response.ok) throw new Error('Failed to load links');
+        const links = await response.json();
+        
+        grid.innerHTML = '';
+        
+        for (const [key, url] of Object.entries(links)) {
+            const card = document.createElement('div');
+            card.style.background = 'white';
+            card.style.padding = '2rem';
+            card.style.borderRadius = '12px';
+            card.style.boxShadow = 'var(--shadow-sm)';
+            card.style.transition = 'transform 0.2s';
+            card.style.cursor = 'pointer';
+            card.style.border = '1px solid #eee';
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.alignItems = 'center';
+            card.style.justifyContent = 'center';
+            
+            card.addEventListener('mouseenter', () => card.style.transform = 'translateY(-5px)');
+            card.addEventListener('mouseleave', () => card.style.transform = 'translateY(0)');
+            
+            // On click, go to redirect page with key
+            card.addEventListener('click', () => {
+                window.location.href = `redirect.html?key=${encodeURIComponent(key)}`;
+            });
+            
+            // Icon
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-gamepad';
+            icon.style.fontSize = '2rem';
+            icon.style.color = 'var(--primary-color)';
+            icon.style.marginBottom = '1rem';
+            
+            // Title
+            const title = document.createElement('h3');
+            title.textContent = key.replace(/_/g, ' '); 
+            title.style.textTransform = 'capitalize';
+            title.style.color = 'var(--text-color)';
+            
+            card.appendChild(icon);
+            card.appendChild(title);
+            grid.appendChild(card);
+        }
+        
+    } catch (err) {
+        console.error('Error loading maps:', err);
+        grid.innerHTML = '<p>Failed to load maps.</p>';
     }
 }

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جاري تحويلك... - رحومي</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Redirection Specific Styles */
+        body {
+            /* Use new palette */
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 100vh;
+        }
+
+        .redirect-layout {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            grid-template-areas: 
+                "top-ad"
+                "main"
+                "bottom-ad";
+            height: 100%;
+        }
+
+        .ad-banner {
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        .ad-banner-slot {
+            width: 100%;
+            max-width: 728px;
+            height: 90px;
+            background: #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #bbb;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .main-content {
+            grid-area: main;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .countdown-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            background: var(--surface-color);
+            box-shadow: var(--shadow-md);
+        }
+
+        .status-text {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin-bottom: 2rem;
+            font-weight: bold;
+        }
+
+        .continue-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            display: none; /* Hidden by default */
+            border: none;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-3px);
+            background-color: var(--primary-dark);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(136, 192, 166, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0); }
+        }
+
+        .hidden { display: none !important; }
+
+        /* Sidebars for desktop */
+        @media (min-width: 1024px) {
+            .main-content {
+                display: grid;
+                grid-template-columns: 1fr 2fr 1fr;
+                gap: 2rem;
+                align-items: center;
+                max-width: 1400px;
+                margin: 0 auto;
+                width: 100%;
+            }
+            .center-panel {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .side-ad {
+                height: 600px;
+                width: 160px;
+                background: #ddd;
+                border: 2px dashed #bbb;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 0 auto;
+                color: #666;
+                writing-mode: vertical-rl;
+                text-orientation: mixed;
+            }
+        }
+        @media (max-width: 1023px) {
+            .side-ad { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-layout">
+        <div class="ad-banner" style="grid-area: top-ad;">
+            <div class="ad-banner-slot">Top Ad Banner (728x90)</div>
+        </div>
+
+        <main class="main-content">
+            <aside class="side-ad left">Side Ad (160x600)</aside>
+            
+            <div class="center-panel">
+                <div id="loading-state">
+                    <p class="status-text">جاري التحميل...</p>
+                </div>
+
+                <div id="timer-state" class="hidden">
+                    <div class="countdown-circle" id="countdown">5</div>
+                    <p class="status-text">يرجى الانتظار...</p>
+                </div>
+
+                <div id="button-state" class="hidden">
+                    <a id="continue-btn" class="continue-btn" href="#">اضغط هنا للانتقال</a>
+                </div>
+
+                <div id="error-state" class="hidden">
+                    <p class="status-text" style="color: #e74c3c;">الرابط غير موجود</p>
+                    <a href="../index.html" class="btn">العودة للرئيسية</a>
+                </div>
+            </div>
+
+            <aside class="side-ad right">Side Ad (160x600)</aside>
+        </main>
+
+        <div class="ad-banner" style="grid-area: bottom-ad;">
+            <div class="ad-banner-slot">Bottom Ad Banner (728x90)</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
+
+            const loadingState = document.getElementById('loading-state');
+            const timerState = document.getElementById('timer-state');
+            const buttonState = document.getElementById('button-state');
+            const errorState = document.getElementById('error-state');
+            const continueBtn = document.getElementById('continue-btn');
+            const countdownEl = document.getElementById('countdown');
+
+            if (!key) {
+                showError();
+                return;
+            }
+
+            try {
+                // Determine path to config
+                // Since this file is in /pages/, config is in ../config/
+                const response = await fetch('../config/links.json');
+                if (!response.ok) throw new Error('Config load failed');
+                const links = await response.json();
+
+                if (links[key]) {
+                    startCountdown(links[key]);
+                } else {
+                    showError();
+                }
+            } catch (err) {
+                console.error(err);
+                showError();
+            }
+
+            function showError() {
+                loadingState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+            }
+
+            function startCountdown(destUrl) {
+                loadingState.classList.add('hidden');
+                timerState.classList.remove('hidden');
+
+                let seconds = 5;
+                countdownEl.textContent = seconds;
+
+                const timer = setInterval(() => {
+                    seconds--;
+                    if (seconds > 0) {
+                        countdownEl.textContent = seconds;
+                    } else {
+                        clearInterval(timer);
+                        showButton(destUrl);
+                    }
+                }, 1000);
+            }
+
+            function showButton(destUrl) {
+                timerState.classList.add('hidden');
+                buttonState.classList.remove('hidden');
+                continueBtn.style.display = 'inline-block';
+                continueBtn.href = destUrl;
+            }
+        });
+    </script>
+</body>
+</html>
