@@ -238,7 +238,8 @@ function renderMapsPage() {
         if (thumbUrl) {
             const imgContainer = document.createElement('div');
             imgContainer.style.width = '100%';
-            imgContainer.style.height = '200px'; // Fixed height for consistency
+            // imgContainer.style.height = '200px'; // REMOVED fixed height
+            imgContainer.style.aspectRatio = '16 / 9'; // Force 16:9 ratio
             imgContainer.style.overflow = 'hidden';
             imgContainer.style.position = 'relative';
 
@@ -246,7 +247,8 @@ function renderMapsPage() {
             img.src = thumbUrl;
             img.style.width = '100%';
             img.style.height = '100%';
-            img.style.objectFit = 'cover';
+            img.style.objectFit = 'cover'; // Cover is fine now if ratio matches, but contain/fill ensures no crop if container is perfect. 
+            // Since we set container to 16/9, and thumb is 16/9, cover is safe and handles slight variances.
             imgContainer.appendChild(img);
             
             // Map Name overlay or below? User said "video thumbnail as an image of the whole thing"
