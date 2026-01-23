@@ -185,7 +185,7 @@ footer p {
 
 /* Home Page Roblox Button Animation */
 .roblox-btn-animate {
-    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+    background: linear-gradient(to bottom, var(--primary-dark), var(--primary-color));
     box-shadow: 0 0 10px rgba(136, 192, 166, 0.5);
     animation: robloxPulse 2s infinite;
     position: relative;
