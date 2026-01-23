@@ -38,11 +38,16 @@ function populateContent(data) {
                 }
                 el.src = src;
             } else if (el.tagName === 'A') {
-                 if (key.includes('url')) {
-                    el.href = value;
-                 } else if (key.includes('email')) {
+                 // Check for email by key name OR content format
+                 if (key.includes('email') || value.includes('@')) {
                     el.href = `mailto:${value}`;
                     el.textContent = value;
+                 } else {
+                    el.href = value;
+                    // Only set text if empty (or if it's a generic link we want to fill)
+                    if (!el.textContent.trim()) {
+                        el.textContent = value;
+                    }
                  }
             } else {
                 el.textContent = value;
