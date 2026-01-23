@@ -141,6 +141,7 @@ footer p {
     gap: 1.5rem;
     margin-top: 2rem;
     width: 100%;
+    padding-bottom: 4rem; /* Match spacing from about page */
 }
 
 .map-card {
