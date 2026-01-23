@@ -49,6 +49,36 @@ function populateContent(data) {
             }
         }
     });
+
+    // Special case for email in contact page (if generic handling didn't catch it or for specific formatting)
+    // We can rely on the generic handler if we update the key in contact.html, but let's keep robust
+    
+    generateSocialLinks(data.links);
+}
+
+function generateSocialLinks(links) {
+    const container = document.getElementById('social-links-container');
+    if (!container || !links) return;
+
+    container.innerHTML = '';
+
+    for (const [key, value] of Object.entries(links)) {
+        // Skip if not a string
+        if (typeof value !== 'string') continue;
+
+        const a = document.createElement('a');
+        a.className = 'btn';
+        a.textContent = key; // The key is the title (e.g. "انستقرام")
+        
+        if (value.includes('@') && !value.startsWith('http')) {
+             a.href = `mailto:${value}`;
+        } else {
+             a.href = value;
+             a.target = '_blank';
+        }
+        
+        container.appendChild(a);
+    }
 }
 
 function generateNav(navItems, isPagesDir) {

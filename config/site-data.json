@@ -1,16 +1,20 @@
 {
   "profile": {
-    "name": "Rahoumi",
-    "welcome_message": "مرحباً بك في الموقع الرسمي الخاص بـ رحومي",
+    "name": "Rahumi - رحومي",
+    "welcome_message": "مرحباً بك في موقع رحومي الرسمي",
     "intro_text": "صانع محتوى، عاشق للألعاب، ومطور طموح.",
-    "about_text": "أنا رحومي، صانع محتوى مهتم بعالم الألعاب والتكنولوجيا. هدفي هو تقديم محتوى ممتع ومفيد للمجتمع.",
-    "avatar_url": "assets/images/avatar-placeholder.png"
+    "about_text": "تجمعنا لحظات روبلوكس وماين كرافت. تعالوا نمرح ونلعب سوية! تابعوني وخل نتونس أكثر! 🎮🕺🏻💥",
+    "avatar_url": "assets/images/rahumi_profile_picture.jpg"
   },
   "links": {
-    "instagram": "https://instagram.com/omg.sama",
-    "youtube": "#",
-    "twitter": "#",
-    "ads_email": "ads@rahoumi.com"
+    "قناتي الأساسية": "https://youtube.com/@rahumi",
+    "قناتي السولو": "https://www.youtube.com/@RahumiExtra",
+    "انستقرام": "https://instagram.com/rahumi",
+    "تيكتوك": "https://tiktok.com/@rahumi",
+    "فيسبوك": "https://facebook.com/rahumi",
+    "تويتش": "https://twitch.tv/rahumi",
+    "تويتر": "https://twitter.com/rahumi",
+    "ايميل الاعلانات": "rahumi@ar-ad.com"
   },
   "contact": {
     "ads_message": "الفريق الإعلاني الخاص بي سيكون سعيداً بالتواصل معكم."
