@@ -51,7 +51,12 @@ function populateContent(data) {
     });
 
     // Special case for email in contact page (if generic handling didn't catch it or for specific formatting)
-    // We can rely on the generic handler if we update the key in contact.html, but let's keep robust
+    // Manually setting it to ensure it works even if the generic handler missed it due to key mismatch
+    const emailLink = document.getElementById('ads-email-link');
+    if (emailLink && data.links['ايميل الاعلانات']) {
+        emailLink.href = `mailto:${data.links['ايميل الاعلانات']}`;
+        emailLink.textContent = data.links['ايميل الاعلانات'];
+    }
     
     generateSocialLinks(data.links);
 }
