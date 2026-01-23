@@ -1,0 +1,28 @@
+:root {
+  /* Color Palette - Soft Green & Off-White */
+  --primary-color: #88c0a6; /* Soft Green */
+  --primary-dark: #5d9c79; /* Darker Green for hover/accents */
+  --primary-light: #bfe3d3; /* Light Green for backgrounds */
+
+  --bg-color: #faf9f6; /* Off-White (Warm) */
+  --surface-color: #ffffff; /* Pure White for cards */
+
+  --text-color: #2f3e3b; /* Dark Green-Gray for text */
+  --text-light: #6b7c76; /* Lighter text for subtitles */
+
+  --accent-color: #e8a87c; /* Soft Orange for CTAs (Complementary) */
+
+  /* Spacing */
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+
+  /* Typography */
+  --font-heading: "Quicksand", "Segoe UI", sans-serif;
+  --font-body: "Nunito", "Segoe UI", sans-serif;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+}

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Redirecting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0f3460;
+            color: #e0e0e0;
+            /* Use dvh (Dynamic Viewport Height) to account for mobile browser bars */
+            height: 100vh; 
+            height: 100dvh; 
+            width: 100vw;
+            overflow: hidden; 
+            display: grid;
+            grid-template-rows: auto 1fr auto; 
+            grid-template-areas:
+                "top-ad"
+                "main"
+                "bottom-ad";
+        }
+
+        /* Top & Bottom Ad Banners */
+        .ad-banner {
+            background: #0f3460;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .ad-banner-slot {
+            width: 100%;
+            max-width: 970px;
+            height: 90px;
+            min-height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed #666;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .top-ad-container { grid-area: top-ad; }
+        .bottom-ad-container { grid-area: bottom-ad; }
+
+        /* Main Grid Layout */
+        main {
+            grid-area: main;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 1rem;
+            padding: 0 1rem;
+            width: 100%;
+            height: 100%; 
+            overflow: hidden;
+            align-items: center; 
+        }
+
+        /* Sidebars */
+        .ad-sidebar {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .ad-sidebar-slot {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed #666;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-weight: bold;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+        }
+
+        /* Content Area */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 1rem;
+            background: rgba(22, 33, 62, 0.5);
+            border-radius: 16px;
+            max-height: 100%;
+            overflow-y: auto; 
+        }
+
+        /* Countdown */
+        .countdown-container { margin-bottom: 2rem; }
+
+        .countdown-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #e94560;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #e94560;
+            margin: 0 auto 1rem;
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .status-text {
+            font-size: 1rem;
+            color: #b0b0b0;
+        }
+
+        /* Button */
+        .continue-btn {
+            background: #2ecc71;
+            color: #fff;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: none;
+            animation: pulse 2s infinite;
+            white-space: nowrap;
+        }
+        .continue-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4); }
+        .continue-btn:active { transform: translateY(1px); }
+
+        .home-btn {
+            background: #e94560;
+            color: #fff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 1rem;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+
+        .hidden { display: none !important; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            main {
+                /* 15% - remaining - 15% */
+                grid-template-columns: 15vw 1fr 15vw; 
+                gap: 0.5rem;
+                padding: 0 0.5rem;
+            }
+
+            .ad-banner {
+                padding: 0.25rem;
+            }
+
+            .ad-banner-slot {
+                height: 10vh; /* Fallback */
+                height: 10dvh; /* Dynamic height */
+                max-height: 90px;
+                min-height: 50px;
+                font-size: 0.7rem;
+            }
+
+            .ad-sidebar-slot {
+                font-size: 0.7rem;      
+            }
+
+            .countdown-circle {
+                width: 15vw;
+                height: 15vw;
+                max-width: 100px;
+                max-height: 100px;
+                min-width: 60px;
+                min-height: 60px;
+                font-size: 2rem;
+            }
+
+            .continue-btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-height: 600px) {
+             .ad-banner-slot { height: 50px; }
+             .countdown-circle { width: 60px; height: 60px; font-size: 1.5rem; margin-bottom: 0.5rem; }
+             .content-area { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Ad Banner -->
+    <div class="ad-banner top-ad-container">
+        <div class="ad-banner-slot">Top</div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <main>
+        <!-- Left Sidebar Ad -->
+        <aside class="ad-sidebar left-sidebar">
+            <div class="ad-sidebar-slot">Ad</div>
+        </aside>
+
+        <!-- Center Content -->
+        <section class="content-area">
+            <!-- Loading State -->
+            <div id="loading-state">
+                <p>...</p>
+            </div>
+
+            <!-- Timer State -->
+            <div id="timer-state" class="hidden">
+                <div class="countdown-circle" id="countdown">5</div>
+                <p class="status-text" id="status-text">Wait...</p>
+            </div>
+
+            <!-- Button State -->
+            <button id="continue-btn" class="continue-btn">CONTINUE</button>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden">
+                <h3 style="color: #e94560; margin-bottom: 0.5rem;">Expired</h3>
+                <a href="/redirect/index.html" class="home-btn" id="home-link">Home</a>
+            </div>
+        </section>
+
+        <!-- Right Sidebar Ad -->
+        <aside class="ad-sidebar right-sidebar">
+            <div class="ad-sidebar-slot">Ad</div>
+        </aside>
+    </main>
+
+    <!-- Bottom Ad Banner -->
+    <div class="ad-banner bottom-ad-container">
+        <div class="ad-banner-slot">Bottom</div>
+    </div>
+
+    <script>
+        (function () {
+            const repoName = "/redirect"; 
+            let destUrl = null;
+
+            // Elements
+            const loadingState = document.getElementById('loading-state');
+            const timerState = document.getElementById('timer-state');
+            const errorState = document.getElementById('error-state');
+            const continueBtn = document.getElementById('continue-btn');
+            const countdownEl = document.getElementById('countdown');
+            const statusTextEl = document.getElementById('status-text');
+            const homeLink = document.getElementById('home-link');
+
+            homeLink.href = repoName + "/index.html";
+
+            let path = window.location.pathname;
+            if (path.startsWith(repoName)) {
+                path = path.substring(repoName.length);
+            }
+            let slug = path.replace(/^\//, "").replace(/\/+$/, "");
+
+            if (!slug) {
+                showError();
+                return;
+            }
+
+            fetch(repoName + "/links.json")
+                .then((response) => {
+                    if (!response.ok) throw new Error("Failed to fetch links.json");
+                    return response.json();
+                })
+                .then((data) => {
+                    if (data[slug]) {
+                        destUrl = data[slug];
+                        startCountdown();
+                    } else {
+                        showError();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Redirect error:", error);
+                    showError();
+                });
+
+            function showError() {
+                loadingState.classList.add('hidden');
+                timerState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+            }
+
+            function startCountdown() {
+                loadingState.classList.add('hidden');
+                timerState.classList.remove('hidden');
+
+                let seconds = 5;
+                countdownEl.textContent = seconds;
+
+                const timer = setInterval(() => {
+                    seconds--;
+                    if (seconds > 0) {
+                        countdownEl.textContent = seconds;
+                    } else {
+                        clearInterval(timer);
+                        showButton();
+                    }
+                }, 1000);
+            }
+
+            function showButton() {
+                countdownEl.style.display = 'none'; 
+                statusTextEl.style.display = 'none';
+                continueBtn.style.display = 'block'; 
+                
+                continueBtn.addEventListener('click', () => {
+                   window.location.replace(destUrl);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

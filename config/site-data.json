@@ -1,0 +1,24 @@
+{
+  "profile": {
+    "name": "Rahoumi",
+    "welcome_message": "مرحباً بك في الموقع الرسمي الخاص بـ رحومي",
+    "intro_text": "صانع محتوى، عاشق للألعاب، ومطور طموح.",
+    "about_text": "أنا رحومي، صانع محتوى مهتم بعالم الألعاب والتكنولوجيا. هدفي هو تقديم محتوى ممتع ومفيد للمجتمع.",
+    "avatar_url": "assets/images/avatar-placeholder.png"
+  },
+  "links": {
+    "instagram": "https://instagram.com/omg.sama",
+    "youtube": "#",
+    "twitter": "#",
+    "ads_email": "ads@rahoumi.com"
+  },
+  "contact": {
+    "ads_message": "الفريق الإعلاني الخاص بي سيكون سعيداً بالتواصل معكم."
+  },
+  "nav": [
+    { "text": "الرئيسية", "url": "index.html" },
+    { "text": "من نحن", "url": "pages/about.html" },
+    { "text": "للتواصل والإعلانات", "url": "pages/contact.html" },
+    { "text": "مابات روبلوكس", "url": "pages/roblox.html" }
+  ]
+}
