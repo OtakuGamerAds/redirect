@@ -520,6 +520,7 @@
         let currentChannel = null;
         let hasChanges = false;
         let sortableInstance = null;
+        let editingItemCard = null; // Track which card is being edited (null = adding new)
 
         // ==================== DOM ELEMENTS ====================
         const loginView = document.getElementById('login-view');
@@ -697,7 +698,7 @@
             card.innerHTML = `
                 <div class="drag-handle">☰</div>
                 <div class="map-card-content">
-                    <h3>${escapeHtml(map.map_name || 'Unnamed')}</h3>
+                    <h3 class="editable-title" title="Click to edit">${escapeHtml(map.map_name || 'Unnamed')} <span style="font-size: 0.8rem; opacity: 0.5;">(✎)</span></h3>
                     <div class="links">
                         <a href="${escapeHtml(map.video_link)}" target="_blank">📹 Video</a>
                         <a href="${escapeHtml(map.map_link)}" target="_blank">🎮 Roblox</a>
@@ -706,13 +707,19 @@
                 <button class="delete-btn" title="Delete">✕</button>
             `;
 
+            // Edit handler (Click on content area, ignore links/buttons)
+            card.querySelector('.map-card-content').addEventListener('click', (e) => {
+                if (e.target.tagName === 'A') return;
+                openEditModal(card, map);
+            });
+
             // Delete handler
-            card.querySelector('.delete-btn').addEventListener('click', () => {
+            card.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); 
                 if (confirm('Are you sure you want to delete this item?')) {
                     card.remove();
                     updateDataFromDOM();
                     markChanged();
-                    // Update channel info count
                     const count = mapsList.querySelectorAll('.map-card').length;
                     channelInfo.textContent = `${currentChannel} — ${count} items`;
                 }
@@ -721,10 +728,28 @@
             return card;
         }
 
-        // ==================== ADD ITEM ====================
-        addItemBtn.addEventListener('click', () => {
+        // ==================== ADD / EDIT ITEM ====================
+        function openEditModal(card, mapData) {
+            editingItemCard = card;
+            
+            // Update Modal Title
+            addModal.querySelector('h2').textContent = card ? '✎ Edit Item' : '➕ Add New Item';
+            addModal.querySelector('button[type="submit"]').textContent = card ? 'Save Changes' : 'Add Item';
+
+            // Fill form
+            if (mapData) {
+                document.getElementById('add-map-name').value = mapData.map_name || '';
+                document.getElementById('add-video-link').value = mapData.video_link || '';
+                document.getElementById('add-map-link').value = mapData.map_link || '';
+            } else {
+                addForm.reset();
+            }
+
             addModal.classList.remove('hidden');
-            addForm.reset();
+        }
+
+        addItemBtn.addEventListener('click', () => {
+            openEditModal(null, null);
         });
 
         cancelAddBtn.addEventListener('click', () => {
@@ -750,9 +775,15 @@
                 map_link: mapLink
             };
 
-            // Add to beginning of current channel's list
-            const newCard = createMapCard(newMap, 0);
-            mapsList.prepend(newCard);
+            if (editingItemCard) {
+                // EDIT MODE: Update existing card
+                const newCard = createMapCard(newMap, 0); // index doesn't matter here
+                mapsList.replaceChild(newCard, editingItemCard);
+            } else {
+                // ADD MODE: Add to beginning
+                const newCard = createMapCard(newMap, 0);
+                mapsList.prepend(newCard);
+            }
 
             updateDataFromDOM();
             markChanged();
