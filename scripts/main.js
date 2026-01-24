@@ -208,20 +208,13 @@ let allMapsData = [];
 
 const CONFIG_FILE = 'config/links.json';
 
-const CHANNEL_KEYS = {
-    'main': 'قناتي الأولى',
-    'extra': 'قناتي الثانية'
-};
-
-let currentChannel = 'main'; // Default to main as requested
+let currentChannel = null; 
+let allMapsDataFull = {};
 
 async function loadRobloxMaps(isPagesDir) {
     const grid = document.getElementById('maps-grid');
     if (!grid) return;
     
-    // Set initial active state for buttons if they exist
-    updateChannelButtons();
-
     await fetchAndRenderMaps(isPagesDir);
 }
 
@@ -237,51 +230,83 @@ async function fetchAndRenderMaps(isPagesDir) {
         const response = await fetch(configPath);
         if (!response.ok) throw new Error('Failed to load links');
         
-        const fullData = await response.json();
+        allMapsDataFull = await response.json();
         
-        // Get the specific list for the current channel
-        const channelKey = CHANNEL_KEYS[currentChannel];
-        allMapsData = fullData[channelKey] || [];
+        // Render Buttons from Keys
+        renderChannelButtons();
+
+        // Default to first key if not set
+        const keys = Object.keys(allMapsDataFull);
+        if (!currentChannel && keys.length > 0) {
+            currentChannel = keys[0];
+        }
         
-        // Reset page on channel switch
-        currentMapsPage = 1;
-        renderMapsPage();
+        // Update selection UI
+        updateChannelButtons();
+
+        // Get data for current channel
+        if (currentChannel) {
+            allMapsData = allMapsDataFull[currentChannel] || [];
+            currentMapsPage = 1;
+            renderMapsPage();
+        } else {
+            grid.innerHTML = '<p>No channels found.</p>';
+        }
         
     } catch (err) {
         console.error('Error loading maps:', err);
         grid.innerHTML = '<p>Failed to load maps.</p>';
-        // Clear pagination if error
         const paginationControls = document.getElementById('pagination-controls');
         if (paginationControls) paginationControls.innerHTML = '';
     }
 }
 
+function renderChannelButtons() {
+    const container = document.getElementById('channel-buttons-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    Object.keys(allMapsDataFull).forEach(key => {
+        const btn = document.createElement('button');
+        btn.textContent = key;
+        btn.className = 'btn';
+        btn.style.transition = 'all 0.3s ease';
+        // Add data attribute for easier selection
+        btn.dataset.channel = key;
+        
+        btn.onclick = () => switchChannel(key);
+        
+        container.appendChild(btn);
+    });
+}
+
 function switchChannel(channel) {
     if (currentChannel === channel) return;
     currentChannel = channel;
+    
     updateChannelButtons();
     
-    // Determine path context
-    const isPagesDir = window.location.pathname.includes('/pages/');
-    fetchAndRenderMaps(isPagesDir);
+    // Update Grid Data
+    if (allMapsDataFull[currentChannel]) {
+        allMapsData = allMapsDataFull[currentChannel];
+        currentMapsPage = 1;
+        renderMapsPage();
+    }
 }
 
 function updateChannelButtons() {
-    const mainBtn = document.getElementById('btn-channel-main');
-    const extraBtn = document.getElementById('btn-channel-extra');
+    const container = document.getElementById('channel-buttons-container');
+    if (!container) return;
     
-    if (mainBtn && extraBtn) {
-        // Remove active class from both buttons first
-        mainBtn.classList.remove('active-channel');
-        extraBtn.classList.remove('active-channel');
-
-        // Add the active class to the currently selected channel's button
-        if (currentChannel === 'main') {
-            mainBtn.classList.add('active-channel');
+    const buttons = container.querySelectorAll('button');
+    buttons.forEach(btn => {
+        if (btn.dataset.channel === currentChannel) {
+            btn.classList.add('active-channel');
         } else {
-            extraBtn.classList.add('active-channel');
+            btn.classList.remove('active-channel');
         }
-    }
+    });
 }
 
 function getYouTubeThumbnail(url) {

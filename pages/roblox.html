@@ -24,13 +24,8 @@
             <p style="margin: 1rem 0; color: var(--text-light);">اختر اللعبة للانتقال إليها</p>
             
             <!-- Channel Selection Buttons -->
-            <div class="channel-selector" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
-                <button id="btn-channel-main" class="btn" onclick="switchChannel('main')" style="transition: all 0.3s ease;">
-                    قناتي الأساسية
-                </button>
-                <button id="btn-channel-extra" class="btn" onclick="switchChannel('extra')" style="transition: all 0.3s ease;">
-                    قناتي الثانية
-                </button>
+            <div id="channel-buttons-container" class="channel-selector" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+                <!-- Javascript will populate this -->
             </div>
             
             <div id="maps-grid" class="maps-stack" style="padding-bottom: 2rem;">
