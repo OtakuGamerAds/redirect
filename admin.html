@@ -1,106 +1,200 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - Rahumi Admin</title>
-    <link rel="stylesheet" href="styles/admin.css">
-    <!-- SortableJS for drag-and-drop -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <title>Admin Login - Rahumi</title>
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--surface-color);
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .login-header {
+            margin-bottom: 2rem;
+        }
+
+        .login-header .logo {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--primary-light);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            color: var(--text-color);
+            background: var(--bg-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(136, 192, 166, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-light);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Status Messages */
+        .status-message {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background-color: rgba(136, 192, 166, 0.2);
+            color: var(--primary-dark);
+            border: 1px solid var(--primary-color);
+        }
+
+        .status-message.error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .status-message.loading {
+            background-color: rgba(136, 192, 166, 0.1);
+            color: var(--text-light);
+            border: 1px solid var(--primary-light);
+        }
+
+        /* Logout Button */
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-light);
+            border: 2px solid var(--primary-light);
+            margin-top: 1rem;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--primary-light);
+            color: var(--text-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
-    <!-- ==================== LOGIN VIEW ==================== -->
-    <div id="login-view" class="view">
-        <div class="login-container">
-            <div class="login-header">
-                <h1>🔐 لوحة التحكم</h1>
-                <p>تسجيل الدخول للمديرين فقط</p>
-            </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="email">البريد الإلكتروني</label>
-                    <input type="email" id="email" required placeholder="admin@example.com">
-                </div>
-                <div class="form-group">
-                    <label for="password">كلمة المرور</label>
-                    <input type="password" id="password" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn btn-primary" id="login-btn">
-                    <span class="btn-text">تسجيل الدخول</span>
-                    <span class="btn-loader hidden">⏳</span>
-                </button>
-                <p id="login-error" class="error-message hidden"></p>
-            </form>
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo">🔐 Admin Panel</div>
+            <p>Authorized access only</p>
         </div>
-    </div>
 
-    <!-- ==================== DASHBOARD VIEW ==================== -->
-    <div id="dashboard-view" class="view hidden">
-        <header class="dashboard-header">
-            <h1>🎮 لوحة تحكم المحتوى</h1>
-            <div class="header-actions">
-                <button id="save-btn" class="btn btn-success">
-                    <span class="btn-text">💾 حفظ التغييرات</span>
-                    <span class="btn-loader hidden">⏳ جاري الحفظ...</span>
-                </button>
-                <button id="logout-btn" class="btn btn-secondary">🚪 تسجيل الخروج</button>
+        <!-- Login Form -->
+        <form id="login-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" required placeholder="admin@example.com" autocomplete="email">
             </div>
-        </header>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="Enter your password" autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn" id="login-btn">Sign In</button>
+        </form>
 
-        <main class="dashboard-content">
-            <!-- Status Messages -->
-            <div id="status-message" class="status-message hidden"></div>
+        <!-- Logout Button (shown after successful login) -->
+        <button id="logout-btn" class="btn btn-secondary hidden">Sign Out</button>
 
-            <!-- ===== SITE DATA SECTION ===== -->
-            <section class="card">
-                <h2>📋 بيانات الموقع</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="profile-name">الاسم</label>
-                        <input type="text" id="profile-name" placeholder="رحومي - Rahumi">
-                    </div>
-                    <div class="form-group">
-                        <label for="profile-welcome">رسالة الترحيب</label>
-                        <input type="text" id="profile-welcome" placeholder="مرحباً بك...">
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="profile-intro">النص التعريفي</label>
-                        <textarea id="profile-intro" rows="2" placeholder="صانع محتوى..."></textarea>
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="profile-about">نبذة عني</label>
-                        <textarea id="profile-about" rows="3" placeholder="تجمعنا لحظات..."></textarea>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== SOCIAL LINKS SECTION ===== -->
-            <section class="card">
-                <h2>🔗 روابط التواصل الاجتماعي</h2>
-                <div class="form-grid" id="social-links-container">
-                    <!-- Will be populated dynamically -->
-                </div>
-            </section>
-
-            <!-- ===== ROBLOX MAPS SECTION ===== -->
-            <section class="card">
-                <h2>🎮 خرائط روبلوكس</h2>
-                <div id="links-container">
-                    <!-- Channel containers will be generated here -->
-                </div>
-            </section>
-        </main>
+        <!-- Status Message -->
+        <div id="status-message" class="status-message"></div>
     </div>
 
     <!-- Firebase SDK -->
     <script type="module">
-        // Import Firebase modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // ==================== FIREBASE CONFIG ====================
-        // Firebase config is safe to be public - security comes from Firestore rules
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCurzL7xeHfumbjnXngeuib0eJZePgM2B8",
             authDomain: "rahumi-redirect.firebaseapp.com",
@@ -110,367 +204,89 @@
             appId: "1:508830697796:web:682d8558d7ad9a298a6f11"
         };
 
-        // GitHub config for triggering the build action
-        const githubConfig = {
-            owner: "OtakuGamerAds",
-            repo: "redirect",
-            // PAT is stored in localStorage for security (set once via console or prompt)
-            getPat: () => localStorage.getItem('github_pat')
-        };
-
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
 
-        // ==================== DOM ELEMENTS ====================
-        const loginView = document.getElementById('login-view');
-        const dashboardView = document.getElementById('dashboard-view');
+        // DOM Elements
         const loginForm = document.getElementById('login-form');
         const loginBtn = document.getElementById('login-btn');
-        const loginError = document.getElementById('login-error');
         const logoutBtn = document.getElementById('logout-btn');
-        const saveBtn = document.getElementById('save-btn');
         const statusMessage = document.getElementById('status-message');
 
-        // ==================== AUTH STATE OBSERVER ====================
-        onAuthStateChanged(auth, async (user) => {
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message show ${type}`;
+        }
+
+        // Hide status message
+        function hideStatus() {
+            statusMessage.className = 'status-message';
+        }
+
+        // Auth State Observer
+        onAuthStateChanged(auth, (user) => {
             if (user) {
                 // User is signed in
-                loginView.classList.add('hidden');
-                dashboardView.classList.remove('hidden');
-                await loadDashboardData();
+                loginForm.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                showStatus(`Welcome! You are logged in as ${user.email}`, 'success');
             } else {
                 // User is signed out
-                loginView.classList.remove('hidden');
-                dashboardView.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
             }
         });
 
-        // ==================== LOGIN HANDLER ====================
+        // Login Handler
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            setButtonLoading(loginBtn, true);
-            hideError();
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+            showStatus('Authenticating...', 'loading');
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
+                // Success message is handled by onAuthStateChanged
             } catch (error) {
-                showError(getErrorMessage(error.code));
+                showStatus(getErrorMessage(error.code), 'error');
             } finally {
-                setButtonLoading(loginBtn, false);
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
             }
         });
 
-        // ==================== LOGOUT HANDLER ====================
+        // Logout Handler
         logoutBtn.addEventListener('click', async () => {
-            await signOut(auth);
-        });
-
-        // ==================== LOAD DATA ====================
-        async function loadDashboardData() {
-            showStatus('جاري تحميل البيانات...', 'info');
+            logoutBtn.disabled = true;
+            logoutBtn.textContent = 'Signing out...';
+            
             try {
-                const docRef = doc(db, 'content', 'main');
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    renderDashboard(data);
-                    showStatus('تم تحميل البيانات بنجاح ✅', 'success');
-                } else {
-                    showStatus('لا توجد بيانات. سيتم إنشاء مستند جديد عند الحفظ.', 'warning');
-                    renderEmptyDashboard();
-                }
+                await signOut(auth);
+                showStatus('You have been signed out successfully.', 'success');
             } catch (error) {
-                console.error('Error loading data:', error);
-                showStatus('خطأ في تحميل البيانات: ' + error.message, 'error');
-            }
-        }
-
-        // ==================== RENDER DASHBOARD ====================
-        function renderDashboard(data) {
-            // Profile data
-            document.getElementById('profile-name').value = data.profile?.name || '';
-            document.getElementById('profile-welcome').value = data.profile?.welcome_message || '';
-            document.getElementById('profile-intro').value = data.profile?.intro_text || '';
-            document.getElementById('profile-about').value = data.profile?.about_text || '';
-
-            // Social links
-            renderSocialLinks(data.socialLinks || {});
-
-            // Maps
-            renderMaps(data.maps || {});
-        }
-
-        function renderEmptyDashboard() {
-            document.getElementById('social-links-container').innerHTML = '';
-            document.getElementById('links-container').innerHTML = '';
-        }
-
-        function renderSocialLinks(socialLinks) {
-            const container = document.getElementById('social-links-container');
-            container.innerHTML = '';
-
-            for (const [name, url] of Object.entries(socialLinks)) {
-                const div = document.createElement('div');
-                div.className = 'form-group';
-                div.innerHTML = `
-                    <label>${name}</label>
-                    <input type="url" data-social-key="${name}" value="${url}" placeholder="https://...">
-                `;
-                container.appendChild(div);
-            }
-        }
-
-        function renderMaps(maps) {
-            const container = document.getElementById('links-container');
-            container.innerHTML = '';
-
-            for (const [channelName, mapList] of Object.entries(maps)) {
-                const channelDiv = document.createElement('div');
-                channelDiv.className = 'channel-container';
-                channelDiv.dataset.channel = channelName;
-
-                channelDiv.innerHTML = `
-                    <div class="channel-header">
-                        <h3>📺 ${channelName}</h3>
-                        <button type="button" class="btn btn-small btn-add" onclick="addNewMap('${channelName}')">➕ إضافة خريطة</button>
-                    </div>
-                    <div class="maps-list" id="maps-${channelName.replace(/\s/g, '-')}">
-                        ${mapList.map((map, index) => createMapCard(channelName, map, index)).join('')}
-                    </div>
-                `;
-
-                container.appendChild(channelDiv);
-
-                // Initialize SortableJS on the maps list
-                const mapsList = channelDiv.querySelector('.maps-list');
-                new Sortable(mapsList, {
-                    animation: 150,
-                    ghostClass: 'map-card-ghost',
-                    handle: '.drag-handle',
-                    onEnd: () => {
-                        // Order is automatically updated in DOM
-                    }
-                });
-            }
-        }
-
-        function createMapCard(channelName, map, index) {
-            return `
-                <div class="map-card" data-channel="${channelName}">
-                    <div class="drag-handle">☰</div>
-                    <div class="map-card-content">
-                        <div class="form-group">
-                            <label>اسم الخريطة</label>
-                            <input type="text" class="map-name" value="${escapeHtml(map.map_name || '')}" placeholder="اسم اللعبة">
-                        </div>
-                        <div class="form-group">
-                            <label>رابط الفيديو</label>
-                            <input type="url" class="video-link" value="${escapeHtml(map.video_link || '')}" placeholder="https://youtu.be/...">
-                        </div>
-                        <div class="form-group">
-                            <label>رابط الخريطة</label>
-                            <input type="url" class="map-link" value="${escapeHtml(map.map_link || '')}" placeholder="https://www.roblox.com/games/...">
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-danger btn-delete" onclick="deleteMapCard(this)">🗑️</button>
-                </div>
-            `;
-        }
-
-        // ==================== MAP ACTIONS ====================
-        window.addNewMap = function(channelName) {
-            const mapsList = document.getElementById(`maps-${channelName.replace(/\s/g, '-')}`);
-            const newCard = document.createElement('div');
-            newCard.className = 'map-card';
-            newCard.dataset.channel = channelName;
-            newCard.innerHTML = `
-                <div class="drag-handle">☰</div>
-                <div class="map-card-content">
-                    <div class="form-group">
-                        <label>اسم الخريطة</label>
-                        <input type="text" class="map-name" value="" placeholder="اسم اللعبة">
-                    </div>
-                    <div class="form-group">
-                        <label>رابط الفيديو</label>
-                        <input type="url" class="video-link" value="" placeholder="https://youtu.be/...">
-                    </div>
-                    <div class="form-group">
-                        <label>رابط الخريطة</label>
-                        <input type="url" class="map-link" value="" placeholder="https://www.roblox.com/games/...">
-                    </div>
-                </div>
-                <button type="button" class="btn btn-danger btn-delete" onclick="deleteMapCard(this)">🗑️</button>
-            `;
-            // Add to the beginning (top)
-            mapsList.prepend(newCard);
-        };
-
-        window.deleteMapCard = function(button) {
-            if (confirm('هل أنت متأكد من حذف هذه الخريطة؟')) {
-                button.closest('.map-card').remove();
-            }
-        };
-
-        // ==================== SAVE HANDLER ====================
-        saveBtn.addEventListener('click', async () => {
-            setButtonLoading(saveBtn, true);
-            showStatus('جاري حفظ التغييرات...', 'info');
-
-            try {
-                const data = collectFormData();
-                
-                // Save to Firestore
-                const docRef = doc(db, 'content', 'main');
-                await setDoc(docRef, data);
-
-                showStatus('تم الحفظ في Firebase. جاري تحديث الموقع...', 'info');
-
-                // Trigger GitHub Action
-                await triggerGitHubAction();
-
-                showStatus('تم حفظ التغييرات وتحديث الموقع بنجاح! ✅', 'success');
-            } catch (error) {
-                console.error('Save error:', error);
-                showStatus('خطأ في الحفظ: ' + error.message, 'error');
+                showStatus('Error signing out. Please try again.', 'error');
             } finally {
-                setButtonLoading(saveBtn, false);
+                logoutBtn.disabled = false;
+                logoutBtn.textContent = 'Sign Out';
             }
         });
 
-        function collectFormData() {
-            // Collect profile data
-            const profile = {
-                name: document.getElementById('profile-name').value,
-                welcome_message: document.getElementById('profile-welcome').value,
-                intro_text: document.getElementById('profile-intro').value,
-                about_text: document.getElementById('profile-about').value,
-                avatar_url: 'assets/images/rahumi_profile_picture.jpg' // Keep existing
-            };
-
-            // Collect social links
-            const socialLinks = {};
-            document.querySelectorAll('[data-social-key]').forEach(input => {
-                socialLinks[input.dataset.socialKey] = input.value;
-            });
-
-            // Collect maps (preserving order from DOM)
-            const maps = {};
-            document.querySelectorAll('.channel-container').forEach(channelDiv => {
-                const channelName = channelDiv.dataset.channel;
-                maps[channelName] = [];
-
-                channelDiv.querySelectorAll('.map-card').forEach(card => {
-                    maps[channelName].push({
-                        map_name: card.querySelector('.map-name').value,
-                        video_link: card.querySelector('.video-link').value,
-                        map_link: card.querySelector('.map-link').value
-                    });
-                });
-            });
-
-            return {
-                profile,
-                socialLinks,
-                maps,
-                contact: {
-                    ads_message: 'فريقي الإعلاني سيكون سعيداً بالتواصل معكم.'
-                },
-                nav: [
-                    { text: 'الرئيسية', url: 'index.html' },
-                    { text: 'مواقع التواصل الاجتماعي', url: 'pages/about.html' },
-                    { text: 'للإعلانات', url: 'pages/contact.html' },
-                    { text: 'ألعاب روبلوكس', url: 'pages/roblox.html' }
-                ]
-            };
-        }
-
-        async function triggerGitHubAction() {
-            const ghPat = githubConfig.getPat();
-            const repoOwner = githubConfig.owner;
-            const repoName = githubConfig.repo;
-
-            if (!ghPat) {
-                // Prompt user to enter PAT if not set
-                const pat = prompt('أدخل GitHub Personal Access Token لتحديث الموقع تلقائياً (اختياري - اتركه فارغاً للتخطي):');
-                if (pat) {
-                    localStorage.setItem('github_pat', pat);
-                } else {
-                    console.warn('GitHub PAT not provided. Manual action trigger required.');
-                    showStatus('تم الحفظ في Firebase! ⚠️ لتحديث الموقع، شغّل GitHub Action يدوياً.', 'warning');
-                    return;
-                }
-            }
-
-            const finalPat = githubConfig.getPat();
-            const response = await fetch(
-                `https://api.github.com/repos/${repoOwner}/${repoName}/actions/workflows/build-from-firebase.yml/dispatches`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${finalPat}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ ref: 'main' })
-                }
-            );
-
-            if (!response.ok && response.status !== 204) {
-                throw new Error('Failed to trigger GitHub Action');
-            }
-        }
-
-        // ==================== UTILITY FUNCTIONS ====================
-        function setButtonLoading(btn, loading) {
-            const text = btn.querySelector('.btn-text');
-            const loader = btn.querySelector('.btn-loader');
-            if (loading) {
-                text.classList.add('hidden');
-                loader.classList.remove('hidden');
-                btn.disabled = true;
-            } else {
-                text.classList.remove('hidden');
-                loader.classList.add('hidden');
-                btn.disabled = false;
-            }
-        }
-
-        function showError(message) {
-            loginError.textContent = message;
-            loginError.classList.remove('hidden');
-        }
-
-        function hideError() {
-            loginError.classList.add('hidden');
-        }
-
-        function showStatus(message, type) {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message status-${type}`;
-            statusMessage.classList.remove('hidden');
-        }
-
+        // Error message mapping
         function getErrorMessage(errorCode) {
             const messages = {
-                'auth/invalid-email': 'البريد الإلكتروني غير صالح',
-                'auth/user-disabled': 'هذا الحساب معطل',
-                'auth/user-not-found': 'لم يتم العثور على المستخدم',
-                'auth/wrong-password': 'كلمة المرور غير صحيحة',
-                'auth/invalid-credential': 'بيانات الدخول غير صحيحة'
+                'auth/invalid-email': 'Invalid email address format.',
+                'auth/user-disabled': 'This account has been disabled.',
+                'auth/user-not-found': 'No account found with this email.',
+                'auth/wrong-password': 'Incorrect password.',
+                'auth/invalid-credential': 'Invalid login credentials.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again later.'
             };
-            return messages[errorCode] || 'حدث خطأ غير متوقع';
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            return messages[errorCode] || 'An unexpected error occurred. Please try again.';
         }
     </script>
 </body>
