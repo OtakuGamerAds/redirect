@@ -52,14 +52,6 @@ jobs:
             const data = docSnap.data();
             console.log('✅ Content fetched successfully!');
 
-            // Build site-data.json
-            const siteData = {
-              profile: data.profile || {},
-              links: data.socialLinks || {},
-              contact: data.contact || {},
-              nav: data.nav || []
-            };
-
             // Build links.json (maps) - preserve channel order
             const mapsData = data.maps || {};
             const channelOrder = data.channelOrder || Object.keys(mapsData);
@@ -73,12 +65,6 @@ jobs:
             });
 
             // Write files
-            fs.writeFileSync(
-              'config/site-data.json',
-              JSON.stringify(siteData, null, 2)
-            );
-            console.log('📄 config/site-data.json written!');
-
             fs.writeFileSync(
               'config/links.json',
               JSON.stringify(linksData, null, 2)
