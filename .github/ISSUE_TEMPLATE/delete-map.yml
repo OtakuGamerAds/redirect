@@ -1,29 +1,0 @@
-name: حذف خريطة
-description: استخدم هذا النموذج لحذف خريطة موجودة من الموقع.
-title: "حذف خريطة"
-labels: ["content-update", "delete-map"]
-body:
-  - type: input
-    id: map-name
-    attributes:
-      label: اسم الخريطة
-      description: "يجب أن يكون الاسم مطابقاً تماماً للاسم الموجود في الموقع."
-    validations:
-      required: true
-  - type: dropdown
-    id: channel
-    attributes:
-      label: القناة
-      description: "اختر القناة التي يوجد فيها الفيديو."
-      options:
-        - "قناتي الأولى"
-        - "قناتي الثانية"
-    validations:
-      required: true
-  - type: input
-    id: secret-token
-    attributes:
-      label: 🔑 رمز المصادقة
-      description: "الرجاء إدخال كلمة السر الخاصة بك لتأكيد هذا التغيير."
-    validations:
-      required: true
