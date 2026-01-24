@@ -72,7 +72,7 @@
             font-size: 0.9rem;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 0.875rem 1rem;
             border: 2px solid var(--primary-light);
@@ -84,7 +84,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(136, 192, 166, 0.2);
@@ -131,18 +131,21 @@
             color: var(--text-color);
         }
 
-        .btn-danger {
-            background-color: #dc3545;
-            padding: 0.5rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-
-        .btn-danger:hover:not(:disabled) {
-            background-color: #c82333;
-        }
-
         .btn-full { width: 100%; }
+
+        /* Channel Buttons */
+        .channel-btn {
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            border: 2px solid var(--primary-light);
+        }
+
+        .channel-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+        }
 
         /* ==================== STATUS MESSAGES ==================== */
         .status-message {
@@ -151,6 +154,7 @@
             border-radius: 10px;
             font-weight: 600;
             display: none;
+            text-align: center;
         }
 
         .status-message.show { display: block; }
@@ -206,29 +210,24 @@
         .dashboard-content {
             flex: 1;
             padding: 2rem;
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
             width: 100%;
         }
 
-        /* ==================== CHANNEL SECTION ==================== */
-        .channel-section {
-            margin-bottom: 2rem;
-        }
-
-        .channel-header {
+        /* ==================== CHANNEL SELECTOR ==================== */
+        .channel-selector {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--primary-light);
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
 
-        .channel-header h2 {
-            font-family: 'Quicksand', sans-serif;
-            font-size: 1.25rem;
-            color: var(--primary-dark);
+        .channel-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
         }
 
         /* ==================== MAP CARDS ==================== */
@@ -236,6 +235,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
+            min-height: 100px;
         }
 
         .map-card {
@@ -285,6 +285,7 @@
             color: var(--text-light);
             display: flex;
             gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .map-card-content .links a {
@@ -379,7 +380,9 @@
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 1rem;
+            flex-wrap: wrap;
         }
 
         /* ==================== RESPONSIVE ==================== */
@@ -439,11 +442,20 @@
             </div>
         </header>
 
-        <main class="dashboard-content" id="content-area">
-            <!-- Channel sections will be rendered here -->
-            <div id="loading-indicator" class="status-message show loading" style="text-align: center;">
+        <main class="dashboard-content">
+            <!-- Status -->
+            <div id="loading-indicator" class="status-message show loading">
                 Loading content...
             </div>
+
+            <!-- Channel Selector Buttons -->
+            <div id="channel-buttons" class="channel-selector"></div>
+
+            <!-- Channel Info -->
+            <div id="channel-info" class="channel-info"></div>
+
+            <!-- Maps List for Current Channel -->
+            <div id="maps-list" class="maps-list"></div>
         </main>
 
         <footer class="save-bar">
@@ -457,12 +469,6 @@
         <div class="modal">
             <h2>➕ Add New Item</h2>
             <form id="add-form">
-                <div class="form-group">
-                    <label for="add-channel">Channel</label>
-                    <select id="add-channel" required style="width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--primary-light); border-radius: 10px; font-size: 1rem; font-family: inherit; background: var(--bg-color);">
-                        <!-- Options populated dynamically -->
-                    </select>
-                </div>
                 <div class="form-group">
                     <label for="add-map-name">Map Name</label>
                     <input type="text" id="add-map-name" required placeholder="e.g. Build A Cart">
@@ -511,8 +517,10 @@
         const db = getFirestore(app);
 
         // ==================== STATE ====================
-        let contentData = {};  // Holds all map data by channel
+        let allChannelsData = {};  // All channels: { "channelName": [...maps], ... }
+        let currentChannel = null;
         let hasChanges = false;
+        let sortableInstance = null;
 
         // ==================== DOM ELEMENTS ====================
         const loginView = document.getElementById('login-view');
@@ -521,13 +529,14 @@
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
         const loginStatus = document.getElementById('login-status');
-        const contentArea = document.getElementById('content-area');
         const loadingIndicator = document.getElementById('loading-indicator');
+        const channelButtonsContainer = document.getElementById('channel-buttons');
+        const channelInfo = document.getElementById('channel-info');
+        const mapsList = document.getElementById('maps-list');
         const addItemBtn = document.getElementById('add-item-btn');
         const addModal = document.getElementById('add-modal');
         const addForm = document.getElementById('add-form');
         const cancelAddBtn = document.getElementById('cancel-add-btn');
-        const addChannelSelect = document.getElementById('add-channel');
         const saveBtn = document.getElementById('save-btn');
         const saveStatus = document.getElementById('save-status');
 
@@ -574,23 +583,34 @@
         // ==================== LOAD CONTENT ====================
         async function loadContent() {
             loadingIndicator.classList.remove('hidden');
-            loadingIndicator.textContent = 'Loading content from Firestore...';
+            loadingIndicator.textContent = 'Loading content...';
 
             try {
+                // Try Firestore first
                 const docRef = doc(db, 'content', 'main');
                 const docSnap = await getDoc(docRef);
 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    contentData = data.maps || {};
+                if (docSnap.exists() && docSnap.data().maps) {
+                    allChannelsData = docSnap.data().maps;
+                    console.log('Loaded from Firestore:', Object.keys(allChannelsData));
                 } else {
-                    // Fallback: Fetch from local links.json
-                    loadingIndicator.textContent = 'No Firestore data. Loading from local JSON...';
+                    // Fallback: Load from local links.json
+                    loadingIndicator.textContent = 'Loading from local JSON...';
                     const response = await fetch('config/links.json');
-                    contentData = await response.json();
+                    if (!response.ok) throw new Error('Failed to load links.json');
+                    allChannelsData = await response.json();
+                    console.log('Loaded from links.json:', Object.keys(allChannelsData));
                 }
 
-                renderContent();
+                // Render channel buttons
+                renderChannelButtons();
+
+                // Select first channel by default
+                const channels = Object.keys(allChannelsData);
+                if (channels.length > 0) {
+                    switchChannel(channels[0]);
+                }
+
                 loadingIndicator.classList.add('hidden');
             } catch (error) {
                 console.error('Error loading content:', error);
@@ -599,61 +619,73 @@
             }
         }
 
-        // ==================== RENDER CONTENT ====================
-        function renderContent() {
-            // Clear existing content (except loading indicator)
-            const sections = contentArea.querySelectorAll('.channel-section');
-            sections.forEach(s => s.remove());
+        // ==================== RENDER CHANNEL BUTTONS ====================
+        function renderChannelButtons() {
+            channelButtonsContainer.innerHTML = '';
 
-            // Populate channel dropdown
-            addChannelSelect.innerHTML = '';
-            
-            for (const [channelName, maps] of Object.entries(contentData)) {
-                // Add to dropdown
-                const option = document.createElement('option');
-                option.value = channelName;
-                option.textContent = channelName;
-                addChannelSelect.appendChild(option);
-
-                // Create section
-                const section = document.createElement('div');
-                section.className = 'channel-section';
-                section.dataset.channel = channelName;
-
-                section.innerHTML = `
-                    <div class="channel-header">
-                        <h2>📺 ${channelName}</h2>
-                        <span>${maps.length} items</span>
-                    </div>
-                    <div class="maps-list" id="list-${sanitizeId(channelName)}"></div>
-                `;
-
-                contentArea.appendChild(section);
-
-                const mapsList = section.querySelector('.maps-list');
-                
-                maps.forEach((map, index) => {
-                    mapsList.appendChild(createMapCard(map, channelName, index));
-                });
-
-                // Initialize SortableJS
-                new Sortable(mapsList, {
-                    animation: 150,
-                    ghostClass: 'sortable-ghost',
-                    chosenClass: 'sortable-chosen',
-                    handle: '.drag-handle',
-                    onEnd: () => {
-                        updateDataFromDOM();
-                        markChanged();
-                    }
-                });
-            }
+            Object.keys(allChannelsData).forEach(channelName => {
+                const btn = document.createElement('button');
+                btn.className = 'btn channel-btn';
+                btn.textContent = channelName;
+                btn.dataset.channel = channelName;
+                btn.onclick = () => switchChannel(channelName);
+                channelButtonsContainer.appendChild(btn);
+            });
         }
 
-        function createMapCard(map, channelName, index) {
+        function updateChannelButtonStyles() {
+            const buttons = channelButtonsContainer.querySelectorAll('.channel-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.channel === currentChannel) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // ==================== SWITCH CHANNEL ====================
+        function switchChannel(channelName) {
+            currentChannel = channelName;
+            updateChannelButtonStyles();
+            renderMapsList();
+        }
+
+        // ==================== RENDER MAPS LIST ====================
+        function renderMapsList() {
+            mapsList.innerHTML = '';
+
+            const maps = allChannelsData[currentChannel] || [];
+            channelInfo.textContent = `${currentChannel} — ${maps.length} items`;
+
+            if (maps.length === 0) {
+                mapsList.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No items in this channel. Click "Add Item" to create one.</p>';
+                return;
+            }
+
+            maps.forEach((map, index) => {
+                mapsList.appendChild(createMapCard(map, index));
+            });
+
+            // Initialize SortableJS
+            if (sortableInstance) {
+                sortableInstance.destroy();
+            }
+            sortableInstance = new Sortable(mapsList, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                handle: '.drag-handle',
+                onEnd: () => {
+                    updateDataFromDOM();
+                    markChanged();
+                }
+            });
+        }
+
+        function createMapCard(map, index) {
             const card = document.createElement('div');
             card.className = 'map-card';
-            card.dataset.channel = channelName;
             card.dataset.index = index;
 
             card.innerHTML = `
@@ -674,19 +706,13 @@
                     card.remove();
                     updateDataFromDOM();
                     markChanged();
-                    updateItemCounts();
+                    // Update channel info count
+                    const count = mapsList.querySelectorAll('.map-card').length;
+                    channelInfo.textContent = `${currentChannel} — ${count} items`;
                 }
             });
 
             return card;
-        }
-
-        function updateItemCounts() {
-            document.querySelectorAll('.channel-section').forEach(section => {
-                const channelName = section.dataset.channel;
-                const count = section.querySelectorAll('.map-card').length;
-                section.querySelector('.channel-header span').textContent = `${count} items`;
-            });
         }
 
         // ==================== ADD ITEM ====================
@@ -707,8 +733,7 @@
 
         addForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const channel = addChannelSelect.value;
+
             const mapName = document.getElementById('add-map-name').value;
             const videoLink = document.getElementById('add-video-link').value;
             const mapLink = document.getElementById('add-map-link').value;
@@ -719,16 +744,17 @@
                 map_link: mapLink
             };
 
-            // Add to beginning of list
-            const listId = `list-${sanitizeId(channel)}`;
-            const mapsList = document.getElementById(listId);
-            const newCard = createMapCard(newMap, channel, 0);
+            // Add to beginning of current channel's list
+            const newCard = createMapCard(newMap, 0);
             mapsList.prepend(newCard);
 
             updateDataFromDOM();
             markChanged();
-            updateItemCounts();
-            
+
+            // Update channel info count
+            const count = mapsList.querySelectorAll('.map-card').length;
+            channelInfo.textContent = `${currentChannel} — ${count} items`;
+
             addModal.classList.add('hidden');
         });
 
@@ -746,13 +772,13 @@
             showStatus(saveStatus, 'Saving to Firestore...', 'loading');
 
             try {
-                // Get existing data or create new
+                // Get existing Firestore data or create new
                 const docRef = doc(db, 'content', 'main');
                 const docSnap = await getDoc(docRef);
                 let fullData = docSnap.exists() ? docSnap.data() : {};
 
                 // Update maps
-                fullData.maps = contentData;
+                fullData.maps = allChannelsData;
 
                 // Save to Firestore
                 await setDoc(docRef, fullData);
@@ -806,31 +832,25 @@
 
         // ==================== UTILITY FUNCTIONS ====================
         function updateDataFromDOM() {
-            contentData = {};
-            document.querySelectorAll('.channel-section').forEach(section => {
-                const channelName = section.dataset.channel;
-                contentData[channelName] = [];
+            // Rebuild current channel's data from DOM order
+            const newMaps = [];
+            mapsList.querySelectorAll('.map-card').forEach(card => {
+                const content = card.querySelector('.map-card-content');
+                const links = content.querySelectorAll('.links a');
 
-                section.querySelectorAll('.map-card').forEach(card => {
-                    const content = card.querySelector('.map-card-content');
-                    const links = content.querySelectorAll('.links a');
-                    
-                    contentData[channelName].push({
-                        map_name: content.querySelector('h3').textContent,
-                        video_link: links[0].href,
-                        map_link: links[1].href
-                    });
+                newMaps.push({
+                    map_name: content.querySelector('h3').textContent,
+                    video_link: links[0].href,
+                    map_link: links[1].href
                 });
             });
+
+            allChannelsData[currentChannel] = newMaps;
         }
 
         function markChanged() {
             hasChanges = true;
             saveBtn.disabled = false;
-        }
-
-        function sanitizeId(str) {
-            return str.replace(/[^a-zA-Z0-9]/g, '-');
         }
 
         function escapeHtml(text) {
