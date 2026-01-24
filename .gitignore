@@ -5,3 +5,6 @@
 .idea/
 .vscode/
 *.log
+
+# Firebase config (contains API keys)
+scripts/firebase-config.js

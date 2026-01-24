@@ -1,0 +1,95 @@
+name: Build Static Content from Firebase
+
+on:
+  workflow_dispatch: # Triggered via API call from admin panel
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Firebase Admin SDK
+        run: npm install firebase-admin
+
+      - name: Fetch from Firestore and Build JSON
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          node << 'EOF'
+          const admin = require('firebase-admin');
+          const fs = require('fs');
+
+          // Initialize Firebase Admin with service account
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+          });
+
+          const db = admin.firestore();
+
+          async function buildContent() {
+            console.log('🔥 Fetching content from Firestore...');
+            
+            const docRef = db.collection('content').doc('main');
+            const docSnap = await docRef.get();
+
+            if (!docSnap.exists) {
+              console.error('❌ No content document found in Firestore!');
+              process.exit(1);
+            }
+
+            const data = docSnap.data();
+            console.log('✅ Content fetched successfully!');
+
+            // Build site-data.json
+            const siteData = {
+              profile: data.profile || {},
+              links: data.socialLinks || {},
+              contact: data.contact || {},
+              nav: data.nav || []
+            };
+
+            // Build links.json (maps)
+            const linksData = data.maps || {};
+
+            // Write files
+            fs.writeFileSync(
+              'config/site-data.json',
+              JSON.stringify(siteData, null, 2)
+            );
+            console.log('📄 config/site-data.json written!');
+
+            fs.writeFileSync(
+              'config/links.json',
+              JSON.stringify(linksData, null, 2)
+            );
+            console.log('📄 config/links.json written!');
+
+            console.log('🎉 Build complete!');
+          }
+
+          buildContent().catch(err => {
+            console.error('❌ Build failed:', err);
+            process.exit(1);
+          });
+          EOF
+
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: build static content from Firestore"
+          commit_user_name: "Content Bot"
+          commit_user_email: "actions@github.com"
+          commit_author: "Content Bot <actions@github.com>"
+          file_pattern: "config/*.json"
