@@ -17,7 +17,7 @@ This folder contains scripts for managing the YouTube video and Roblox game link
 Fetches videos from YouTube channels that are missing from your JSON files.
 
 ```bash
-python scripts/fetch_missing_videos.py
+python tools/fetch_missing_videos.py
 ```
 
 **What it does:**
@@ -35,7 +35,7 @@ python scripts/fetch_missing_videos.py
 Sorts your JSON files to match the actual order on the YouTube channels.
 
 ```bash
-python scripts/sort_by_channel_order.py
+python tools/sort_by_channel_order.py
 ```
 
 **What it does:**
@@ -52,7 +52,7 @@ python scripts/sort_by_channel_order.py
 Fetches proper game names from Roblox game pages.
 
 ```bash
-node scripts/fetch_roblox_names.js
+node tools/fetch_roblox_names.js
 ```
 
 **What it does:**
@@ -73,13 +73,13 @@ When new videos are uploaded:
 1. **Fetch new videos:**
 
    ```bash
-   python scripts/fetch_missing_videos.py
+   python tools/fetch_missing_videos.py
    ```
 
 2. **Get proper Roblox game names:**
 
    ```bash
-   node scripts/fetch_roblox_names.js
+   node tools/fetch_roblox_names.js
    ```
 
 3. **Done!** Your JSON files are updated with new videos in the correct order.
