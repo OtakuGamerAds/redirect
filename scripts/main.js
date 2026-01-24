@@ -266,20 +266,16 @@ function updateChannelButtons() {
     const extraBtn = document.getElementById('btn-channel-extra');
     
     if (mainBtn && extraBtn) {
-        // Reset styles
+        // Remove active class from both buttons first
         mainBtn.classList.remove('active-channel');
         extraBtn.classList.remove('active-channel');
-        
-        // Define active style class in CSS or inline
-        // For now, let's use inline background color manipulation or a class if we had one.
-        // Let's assume we add a class or toggle style.
-        // Since we don't have CSS access right now, I'll toggle inline styles for simplicity/robustness match.
-        
-        const inactiveStyle = "background-color: var(--surface-color); color: var(--text-color); border: 1px solid var(--primary-color);";
-        const activeStyle = "background-color: var(--primary-color); color: white; border: 1px solid var(--primary-color);";
-        
-        mainBtn.style.cssText = currentChannel === 'main' ? activeStyle : inactiveStyle;
-        extraBtn.style.cssText = currentChannel === 'extra' ? activeStyle : inactiveStyle;
+
+        // Add the active class to the currently selected channel's button
+        if (currentChannel === 'main') {
+            mainBtn.classList.add('active-channel');
+        } else {
+            extraBtn.classList.add('active-channel');
+        }
     }
 }
 

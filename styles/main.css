@@ -183,6 +183,21 @@ footer p {
     margin: 0;
 }
 
+/* Channel Selector Buttons */
+.channel-selector .btn {
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    border: 1px solid var(--primary-light);
+}
+
+.channel-selector .btn.active-channel {
+    background-color: var(--primary-color);
+    color: white;
+    border: 1px solid var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+
 /* Home Page Roblox Button Animation */
 .roblox-btn-animate {
     background: linear-gradient(to bottom, var(--primary-dark), var(--primary-color));
