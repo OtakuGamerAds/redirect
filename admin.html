@@ -599,7 +599,9 @@
                 } else {
                     // Fallback: Load from local links.json
                     loadingIndicator.textContent = 'Loading from local JSON...';
-                    const response = await fetch('config/links.json');
+                    // Fallback: Load from local links.json with cache busting
+                    loadingIndicator.textContent = 'Loading from local JSON...';
+                    const response = await fetch('config/links.json?t=' + new Date().getTime());
                     if (!response.ok) throw new Error('Failed to load links.json');
                     allChannelsData = await response.json();
                     // Preserve the order from JSON (object keys in insertion order)

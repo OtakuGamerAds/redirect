@@ -6,7 +6,8 @@ async function loadConfig() {
     try {
         // Determine path to config based on current location
         const isPagesDir = window.location.pathname.includes('/pages/');
-        const configPath = isPagesDir ? '../config/site-data.json' : 'config/site-data.json';
+        // Cache busting: Append timestamp to force fresh fetch
+        const configPath = (isPagesDir ? '../config/site-data.json' : 'config/site-data.json') + '?t=' + new Date().getTime();
 
         const response = await fetch(configPath);
         if (!response.ok) throw new Error('Failed to load config');
