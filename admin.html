@@ -516,6 +516,7 @@
 
         // ==================== STATE ====================
         let allChannelsData = {};  // All channels: { "channelName": [...maps], ... }
+        let channelOrder = [];     // Preserves original channel order
         let currentChannel = null;
         let hasChanges = false;
         let sortableInstance = null;
@@ -589,24 +590,28 @@
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists() && docSnap.data().maps) {
-                    allChannelsData = docSnap.data().maps;
-                    console.log('Loaded from Firestore:', Object.keys(allChannelsData));
+                    const data = docSnap.data();
+                    allChannelsData = data.maps;
+                    // Use saved channel order if available, otherwise use keys
+                    channelOrder = data.channelOrder || Object.keys(allChannelsData);
+                    console.log('Loaded from Firestore:', channelOrder);
                 } else {
                     // Fallback: Load from local links.json
                     loadingIndicator.textContent = 'Loading from local JSON...';
                     const response = await fetch('config/links.json');
                     if (!response.ok) throw new Error('Failed to load links.json');
                     allChannelsData = await response.json();
-                    console.log('Loaded from links.json:', Object.keys(allChannelsData));
+                    // Preserve the order from JSON (object keys in insertion order)
+                    channelOrder = Object.keys(allChannelsData);
+                    console.log('Loaded from links.json:', channelOrder);
                 }
 
                 // Render channel buttons
                 renderChannelButtons();
 
                 // Select first channel by default
-                const channels = Object.keys(allChannelsData);
-                if (channels.length > 0) {
-                    switchChannel(channels[0]);
+                if (channelOrder.length > 0) {
+                    switchChannel(channelOrder[0]);
                 }
 
                 loadingIndicator.classList.add('hidden');
@@ -621,13 +626,16 @@
         function renderChannelButtons() {
             channelButtonsContainer.innerHTML = '';
 
-            Object.keys(allChannelsData).forEach(channelName => {
-                const btn = document.createElement('button');
-                btn.className = 'btn channel-btn';
-                btn.textContent = channelName;
-                btn.dataset.channel = channelName;
-                btn.onclick = () => switchChannel(channelName);
-                channelButtonsContainer.appendChild(btn);
+            // Use channelOrder to ensure consistent button order
+            channelOrder.forEach(channelName => {
+                if (allChannelsData[channelName]) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn channel-btn';
+                    btn.textContent = channelName;
+                    btn.dataset.channel = channelName;
+                    btn.onclick = () => switchChannel(channelName);
+                    channelButtonsContainer.appendChild(btn);
+                }
             });
         }
 
@@ -775,8 +783,9 @@
                 const docSnap = await getDoc(docRef);
                 let fullData = docSnap.exists() ? docSnap.data() : {};
 
-                // Update maps
+                // Update maps and channel order
                 fullData.maps = allChannelsData;
+                fullData.channelOrder = channelOrder;
 
                 // Save to Firestore
                 await setDoc(docRef, fullData);

@@ -60,8 +60,17 @@ jobs:
               nav: data.nav || []
             };
 
-            // Build links.json (maps)
-            const linksData = data.maps || {};
+            // Build links.json (maps) - preserve channel order
+            const mapsData = data.maps || {};
+            const channelOrder = data.channelOrder || Object.keys(mapsData);
+            
+            // Build ordered object
+            const linksData = {};
+            channelOrder.forEach(channel => {
+              if (mapsData[channel]) {
+                linksData[channel] = mapsData[channel];
+              }
+            });
 
             // Write files
             fs.writeFileSync(
