@@ -470,10 +470,7 @@
         <div class="modal">
             <h2>➕ Add New Item</h2>
             <form id="add-form">
-                <div class="form-group">
-                    <label for="add-map-name">Map Name</label>
-                    <input type="text" id="add-map-name" required placeholder="e.g. Build A Cart">
-                </div>
+                <!-- Map Name Removed -->
                 <div class="form-group">
                     <label for="add-video-link">Video Link</label>
                     <input type="url" id="add-video-link" required placeholder="https://youtu.be/...">
@@ -661,6 +658,18 @@
             renderMapsList();
         }
 
+        // ==================== HELPER: FETCH TITLE ====================
+        async function fetchVideoTitle(videoUrl) {
+            if (!videoUrl) return null;
+            try {
+                const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`);
+                const data = await response.json();
+                return data.title;
+            } catch {
+                return null;
+            }
+        }
+
         // ==================== RENDER MAPS LIST ====================
         function renderMapsList() {
             mapsList.innerHTML = '';
@@ -701,7 +710,7 @@
             card.innerHTML = `
                 <div class="drag-handle">☰</div>
                 <div class="map-card-content">
-                    <h3 class="editable-title" title="Click to edit">${escapeHtml(map.map_name || 'Unnamed')}</h3>
+                    <h3 class="editable-title" title="Click to edit">Loading title...</h3>
                     <div class="links">
                         <a href="${escapeHtml(map.video_link)}" target="_blank">📹 Video</a>
                         <a href="${escapeHtml(map.map_link)}" target="_blank">🎮 Roblox</a>
@@ -709,6 +718,13 @@
                 </div>
                 <button class="delete-btn" title="Delete">✕</button>
             `;
+
+            // Fetch Title
+            fetchVideoTitle(map.video_link).then(title => {
+                const titleEl = card.querySelector('h3');
+                titleEl.textContent = title || map.video_link || 'No Title';
+                // Store fetched title for edit modal (optional, but we assume it's read-only now)
+            });
 
             // Edit handler (Click on content area, ignore links/buttons)
             card.querySelector('.map-card-content').addEventListener('click', (e) => {
@@ -741,7 +757,6 @@
 
             // Fill form
             if (mapData) {
-                document.getElementById('add-map-name').value = mapData.map_name || '';
                 document.getElementById('add-video-link').value = mapData.video_link || '';
                 document.getElementById('add-map-link').value = mapData.map_link || '';
             } else {
@@ -770,12 +785,10 @@
         addForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const mapName = document.getElementById('add-map-name').value;
             const videoLink = document.getElementById('add-video-link').value;
             const mapLink = document.getElementById('add-map-link').value;
 
             const newMap = {
-                map_name: mapName,
                 video_link: videoLink,
                 map_link: mapLink
             };
