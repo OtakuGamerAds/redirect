@@ -359,36 +359,33 @@ async function fetchVideoTitle(videoUrl) {
 }
 
 function formatTitleWithBadges(title) {
-    if (!window.siteCollaborators) return title;
+    if (!title) return "";
     
-    // Replace handles like @OtakuG with styled links
-    // We escape the title first to prevent XSS if it wasn't already safe, 
-    // but since we're injecting HTML, we need to be careful. 
-    // Assuming titles from YouTube/Config are relatively safe text.
-    
-    let formattedTitle = title;
-    
-    // Regex to find @Handle generally (alphanumeric + underscore)
-    // We iterate over our known collaborators to replace specifically them
-    for (const [handle, data] of Object.entries(window.siteCollaborators)) {
-        // Case-insensitive replacement for better UX? Or exact? 
-        // YouTube handles are technically case-insensitive now (I think), but let's stick to exact or loose match.
-        // The user asked for "each time there is a name of a youtuber... replace their handle".
+    // Regex to find @Handle (alphanumeric, underscore, dot, hyphen)
+    // Matches @FollowedByChars until a space or end of string or non-handle char
+    const regex = /@([a-zA-Z0-9_.-]+)/g;
+
+    return title.replace(regex, (match, handle) => {
+        let name = handle;
+        let url = `https://www.youtube.com/@${handle}`;
+        let imgSrc = `https://unavatar.io/youtube/@${handle}`;
         
-        // Escape handle for regex
-        const escapedHandle = handle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
-        const regex = new RegExp(`(${escapedHandle})`, 'gi'); // Global, Case-insensitive
-        
-        if (formattedTitle.match(regex)) {
-             const badgeHtml = `<a href="${data.url}" target="_blank" class="youtuber-badge" onclick="event.stopPropagation();">
-                <i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>
-                ${data.name}
-            </a>`;
-            formattedTitle = formattedTitle.replace(regex, badgeHtml);
+        // Check overrides
+        if (window.siteCollaborators && window.siteCollaborators[`@${handle}`]) {
+            const data = window.siteCollaborators[`@${handle}`];
+            name = data.name || handle;
+            url = data.url || url;
+            // If they provided an image in the future, we could use it, 
+            // but for now we default to unavatar or if the config had an avatar field.
+            if (data.avatar) imgSrc = data.avatar; 
         }
-    }
-    
-    return formattedTitle;
+
+        return `<a href="${url}" target="_blank" class="youtuber-badge" onclick="event.stopPropagation();">
+            <img src="${imgSrc}" alt="${handle}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />
+            <i class="fab fa-youtube fallback-icon" style="display:none; margin-left:5px; color: #ff0000;"></i>
+            <span>${name}</span>
+        </a>`;
+    });
 }
 
 function createMapCard(item) {

@@ -256,3 +256,14 @@ footer p {
         background-color: rgba(255, 255, 255, 0.2);
     }
 }
+
+.youtuber-badge img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-left: 6px;
+    object-fit: cover;
+}
+.youtuber-badge span {
+    margin-right: 2px;
+}
