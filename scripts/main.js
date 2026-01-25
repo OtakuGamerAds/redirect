@@ -219,6 +219,19 @@ function generateNav(navItems, isPagesDir) {
     a.href = finalUrl;
     a.textContent = item.text;
 
+    // Special styling for Roblox link to match toggle button
+    if (item.url.includes("roblox.html")) {
+        a.classList.add("btn");
+        a.style.padding = "0.5rem 1rem";
+        a.style.color = "white";
+        a.style.display = "inline-flex";
+        a.style.alignItems = "center";
+        
+        // Ensure no default hover color override issues if needed, but btn class handles most
+        // We might want to ensure it looks distinct or exactly like the toggle?
+        // The user said "become a button box too", generic .btn class does this with primary color.
+    }
+
     // Simple active check
     if (
       window.location.href.endsWith(finalUrl) ||
