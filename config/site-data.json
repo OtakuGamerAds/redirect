@@ -1,10 +1,8 @@
 {
   "enable_redirect_feature": false,
+  "enable_redirect_feature": false,
   "collaborators": {
-      "@OtakuG": {
-          "name": "OtakuG",
-          "url": "https://www.youtube.com/@OtakuG"
-      }
+      // Manual overrides can be added here if needed
   },
   "profile": {
     "name": "رحومي - Rahumi",

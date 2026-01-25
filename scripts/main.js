@@ -340,6 +340,7 @@ function appendMaps() {
 
 const videoTitleCache = {};
 const channelDataCache = {};
+const channelFetchPromises = {};
 
 async function fetchVideoTitle(videoUrl) {
     if (!videoUrl) return null;
@@ -362,36 +363,48 @@ async function fetchVideoTitle(videoUrl) {
 // Fetch channel info using microlink.io
 async function fetchChannelInfo(handle) {
     if (channelDataCache[handle]) return channelDataCache[handle];
+    if (channelFetchPromises[handle]) return channelFetchPromises[handle];
 
-    const channelUrl = `https://www.youtube.com/@${handle}`;
-    try {
-        const response = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(channelUrl)}`);
-        if (!response.ok) throw new Error("Microlink fetch failed");
-        
-        const json = await response.json();
-        if (json.status === 'success' && json.data) {
-            const info = {
-                name: json.data.author || json.data.title || handle,
-                url: json.data.url || channelUrl,
-                image: json.data.image ? json.data.image.url : null,
-                logo: json.data.logo ? json.data.logo.url : null
-            };
-            // Prefer logo/image
-            info.avatar = info.image || info.logo || `https://unavatar.io/youtube/@${handle}`;
+    const fetchPromise = (async () => {
+        const channelUrl = `https://www.youtube.com/@${handle}`;
+        try {
+            const response = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(channelUrl)}`);
+            if (!response.ok) throw new Error("Microlink fetch failed");
             
-            channelDataCache[handle] = info;
-            return info;
+            const json = await response.json();
+            if (json.status === 'success' && json.data) {
+                const info = {
+                    name: json.data.author || json.data.title || handle,
+                    url: json.data.url || channelUrl,
+                    image: json.data.image ? json.data.image.url : null,
+                    logo: json.data.logo ? json.data.logo.url : null
+                };
+                // Prefer logo/image
+                info.avatar = info.image || info.logo || `https://unavatar.io/youtube/@${handle}`;
+                
+                channelDataCache[handle] = info;
+                return info;
+            }
+        } catch (error) {
+            console.warn("Error fetching channel info for", handle, error);
         }
-    } catch (error) {
-        console.warn("Error fetching channel info for", handle, error);
-    }
+        
+        // Fallback if failed
+        const fallbackInfo = {
+            name: handle,
+            url: channelUrl,
+            avatar: `https://unavatar.io/youtube/@${handle}`
+        };
+        channelDataCache[handle] = fallbackInfo;
+        return fallbackInfo;
+    })();
+
+    channelFetchPromises[handle] = fetchPromise;
     
-    // Fallback if failed
-    return {
-        name: handle,
-        url: channelUrl,
-        avatar: `https://unavatar.io/youtube/@${handle}`
-    };
+    // Clear promise from cache when done (optional, but data cache handles future requests)
+    // We keep it simple: channelDataCache takes precedence, so next call returns data immediately.
+    
+    return fetchPromise;
 }
 
 function formatTitleWithBadges(title) {
