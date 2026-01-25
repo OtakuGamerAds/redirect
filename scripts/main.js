@@ -339,6 +339,7 @@ function appendMaps() {
 }
 
 const videoTitleCache = {};
+const channelDataCache = {};
 
 async function fetchVideoTitle(videoUrl) {
     if (!videoUrl) return null;
@@ -358,34 +359,93 @@ async function fetchVideoTitle(videoUrl) {
     return null;
 }
 
+// Fetch channel info using microlink.io
+async function fetchChannelInfo(handle) {
+    if (channelDataCache[handle]) return channelDataCache[handle];
+
+    const channelUrl = `https://www.youtube.com/@${handle}`;
+    try {
+        const response = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(channelUrl)}`);
+        if (!response.ok) throw new Error("Microlink fetch failed");
+        
+        const json = await response.json();
+        if (json.status === 'success' && json.data) {
+            const info = {
+                name: json.data.author || json.data.title || handle,
+                url: json.data.url || channelUrl,
+                image: json.data.image ? json.data.image.url : null,
+                logo: json.data.logo ? json.data.logo.url : null
+            };
+            // Prefer logo/image
+            info.avatar = info.image || info.logo || `https://unavatar.io/youtube/@${handle}`;
+            
+            channelDataCache[handle] = info;
+            return info;
+        }
+    } catch (error) {
+        console.warn("Error fetching channel info for", handle, error);
+    }
+    
+    // Fallback if failed
+    return {
+        name: handle,
+        url: channelUrl,
+        avatar: `https://unavatar.io/youtube/@${handle}`
+    };
+}
+
 function formatTitleWithBadges(title) {
     if (!title) return "";
     
     // Regex to find @Handle (alphanumeric, underscore, dot, hyphen)
-    // Matches @FollowedByChars until a space or end of string or non-handle char
     const regex = /@([a-zA-Z0-9_.-]+)/g;
 
     return title.replace(regex, (match, handle) => {
-        let name = handle;
-        let url = `https://www.youtube.com/@${handle}`;
-        let imgSrc = `https://unavatar.io/youtube/@${handle}`;
-        
-        // Check overrides
-        if (window.siteCollaborators && window.siteCollaborators[`@${handle}`]) {
-            const data = window.siteCollaborators[`@${handle}`];
-            name = data.name || handle;
-            url = data.url || url;
-            // If they provided an image in the future, we could use it, 
-            // but for now we default to unavatar or if the config had an avatar field.
-            if (data.avatar) imgSrc = data.avatar; 
-        }
-
-        return `<a href="${url}" target="_blank" class="youtuber-badge" onclick="event.stopPropagation();">
-            <img src="${imgSrc}" alt="${handle}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />
-            <i class="fab fa-youtube fallback-icon" style="display:none; margin-left:5px; color: #ff0000;"></i>
-            <span>${name}</span>
+        // Return a placeholder badge that we will hydrate asynchronously
+        // We use a specific class and data attribute to find it later
+        return `<a href="https://www.youtube.com/@${handle}" target="_blank" class="youtuber-badge pending-badge" data-handle="${handle}" onclick="event.stopPropagation();">
+            <i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>
+            <span>${handle}</span>
         </a>`;
     });
+}
+
+async function processBadges(container) {
+    const badges = container.querySelectorAll('.youtuber-badge.pending-badge');
+    
+    for (const badge of badges) {
+        const handle = badge.dataset.handle;
+        
+        // Remove pending class to avoid double processing if called multiple times
+        badge.classList.remove('pending-badge');
+        
+        // Check manual overrides first
+        if (window.siteCollaborators && window.siteCollaborators[`@${handle}`]) {
+            const data = window.siteCollaborators[`@${handle}`];
+            updateBadgeUI(badge, data.name, data.avatar, data.url);
+            continue;
+        }
+
+        // Fetch dynamic data
+        fetchChannelInfo(handle).then(info => {
+             updateBadgeUI(badge, info.name, info.avatar, info.url);
+        });
+    }
+}
+
+function updateBadgeUI(badge, name, avatar, url) {
+    badge.href = url;
+    
+    let content = "";
+    if (avatar) {
+        content += `<img src="${avatar}" alt="${name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />`;
+        content += `<i class="fab fa-youtube fallback-icon" style="display:none; margin-left:5px; color: #ff0000;"></i>`;
+    } else {
+        content += `<i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>`;
+    }
+    content += `<span>${name}</span>`;
+    
+    badge.innerHTML = content;
 }
 
 function createMapCard(item) {
@@ -430,10 +490,15 @@ function createMapCard(item) {
   // Add a class to help identify elements still waiting for a title if needed
   title.classList.add("map-title"); 
   
+  // Process badges in the initial title
+  processBadges(title);
+
   // Async fetch title
   fetchVideoTitle(item.video_link).then(fetchedTitle => {
       if (fetchedTitle) {
           title.innerHTML = formatTitleWithBadges(fetchedTitle);
+          // Process badges in the NEW title
+          processBadges(title);
       }
   });
 
