@@ -1,9 +1,6 @@
 {
   "enable_redirect_feature": false,
-  "enable_redirect_feature": false,
-  "collaborators": {
-      // Manual overrides can be added here if needed
-  },
+  "collaborators": {},
   "profile": {
     "name": "رحومي - Rahumi",
     "welcome_message": "مرحباً بك في موقع رحومي الرسمي",
