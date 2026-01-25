@@ -941,15 +941,41 @@
                 addForm.reset();
             }
 
+
             addModal.classList.remove('hidden');
             
-            // Plain textarea population
+            // Populate textarea: try existing data first, then fetch file
             const textarea = document.getElementById("add-article-content");
-            if (mapData) {
-                 textarea.value = mapData.article_content || "";
-            } else {
-                 textarea.value = "";
+            textarea.value = mapData ? (mapData.article_content || "") : "";
+            textarea.placeholder = "Loading existing article...";
+
+            if (mapData && mapData.video_link && !textarea.value) {
+                const videoId = extractVideoId(mapData.video_link);
+                if (videoId) {
+                    fetch(`assets/articles/${videoId}.md?t=${new Date().getTime()}`)
+                        .then(response => {
+                            if (response.ok) return response.text();
+                            throw new Error('Not found');
+                        })
+                        .then(text => {
+                            // Only update if user hasn't started typing
+                            if (textarea.value === "") {
+                                textarea.value = text;
+                            }
+                        })
+                        .catch(err => {
+                            textarea.placeholder = "No existing article found. Write one here...";
+                        });
+                }
+            } else if (!mapData) {
+                 textarea.placeholder = "Write your article here...";
             }
+        }
+
+        function extractVideoId(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
+            return match ? match[1] : null;
         }
 
         addItemBtn.addEventListener('click', () => {
