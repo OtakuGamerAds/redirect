@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="styles/variables.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -512,6 +514,10 @@
                     <label for="add-map-link">Map Link (Roblox)</label>
                     <input type="url" id="add-map-link" required placeholder="https://www.roblox.com/games/...">
                 </div>
+                <div class="form-group">
+                    <label for="add-article-content">Article Content (Markdown)</label>
+                    <textarea id="add-article-content"></textarea>
+                </div>
                 <div class="modal-actions">
                     <button type="button" id="cancel-add-btn" class="btn btn-secondary">Cancel</button>
                     <button type="submit" class="btn">Add Item</button>
@@ -552,6 +558,7 @@
         let hasChanges = false;
         let sortableInstance = null;
         let editingItemCard = null; // Track which card is being edited (null = adding new)
+        let simplemde = null;
 
         // ==================== DOM ELEMENTS ====================
         const loginView = document.getElementById('login-view');
@@ -870,6 +877,9 @@
                 </div>
                 <button class="delete-btn" title="Delete">✕</button>
             `;
+            
+            // Store full data on the card for retrieval
+            card.dataset.mapData = JSON.stringify(map);
 
             // Fetch Title
             fetchVideoTitle(map.video_link).then(title => {
@@ -921,6 +931,20 @@
             }
 
             addModal.classList.remove('hidden');
+            
+            // Refresh SimpleMDE to ensure it renders correctly
+            if (!simplemde) {
+                simplemde = new SimpleMDE({ element: document.getElementById("add-article-content") });
+            }
+             
+            if (mapData) {
+                 simplemde.value(mapData.article_content || "");
+            } else {
+                 simplemde.value("");
+            }
+            
+            // Fix layout bug where editor might look squashed
+            setTimeout(() => simplemde.codemirror.refresh(), 200);
         }
 
         addItemBtn.addEventListener('click', () => {
@@ -949,7 +973,8 @@
 
             const newMap = {
                 video_link: videoLink,
-                map_link: mapLink
+                map_link: mapLink,
+                article_content: simplemde.value()
             };
 
             if (editingItemCard) {
@@ -1028,11 +1053,15 @@
             mapsList.querySelectorAll('.map-card').forEach(card => {
                 const content = card.querySelector('.map-card-content');
                 const links = content.querySelectorAll('.links a');
+                
+                // Retrieve stored data attached to the card
+                const existingData = card.dataset.mapData ? JSON.parse(card.dataset.mapData) : {};
 
                 newMaps.push({
                     map_name: content.querySelector('h3').textContent,
                     video_link: links[0].href,
-                    map_link: links[1].href
+                    map_link: links[1].href,
+                    article_content: existingData.article_content || "" 
                 });
             });
 

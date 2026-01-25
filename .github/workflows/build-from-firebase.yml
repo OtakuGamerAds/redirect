@@ -58,9 +58,34 @@ jobs:
             
             // Build ordered object
             const linksData = {};
+            
+            // Ensure assets/articles directory exists
+            if (!fs.existsSync('assets/articles')) {
+                fs.mkdirSync('assets/articles', { recursive: true });
+            }
+
             channelOrder.forEach(channel => {
               if (mapsData[channel]) {
-                linksData[channel] = mapsData[channel];
+                linksData[channel] = mapsData[channel].map(item => {
+                    // Extract Video ID
+                    let videoId = null;
+                    if (item.video_link) {
+                        const match = item.video_link.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
+                        if (match) videoId = match[1];
+                    }
+
+                    // If Article Content exists, write to file
+                    if (item.article_content && videoId) {
+                        const filePath = `assets/articles/${videoId}.md`;
+                        fs.writeFileSync(filePath, item.article_content);
+                        console.log(`📝 Wrote article for ${videoId}`);
+                    }
+                    
+                    // Return item without the heavy blog content to keep JSON light
+                    // (Optional: keep it if we want it in JSON too, but better to keep JSON small)
+                    const { article_content, ...cleanItem } = item;
+                    return cleanItem;
+                });
               }
             });
 
@@ -87,4 +112,4 @@ jobs:
           commit_user_name: "Content Bot"
           commit_user_email: "actions@github.com"
           commit_author: "Content Bot <actions@github.com>"
-          file_pattern: "config/*.json"
+          file_pattern: "config/*.json assets/articles/*.md"
