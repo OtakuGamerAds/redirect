@@ -696,6 +696,17 @@
             });
         }
 
+
+
+        function normalizeYoutubeLink(url) {
+            if (!url) return '';
+            const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+            if (match && match[2].length === 11) {
+                return `https://youtu.be/${match[2]}`;
+            }
+            return url;
+        }
+
         // ==================== SWITCH CHANNEL ====================
         function switchChannel(channelName) {
             currentChannel = channelName;
@@ -931,7 +942,9 @@
         addForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const videoLink = document.getElementById('add-video-link').value;
+            let videoLink = document.getElementById('add-video-link').value;
+            videoLink = normalizeYoutubeLink(videoLink);
+            
             const mapLink = document.getElementById('add-map-link').value;
 
             const newMap = {
