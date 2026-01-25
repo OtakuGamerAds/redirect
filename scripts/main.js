@@ -471,10 +471,17 @@ async function fetchChannelInfo(handle) {
 function formatTitleWithBadges(title) {
     if (!title) return "";
     
+    // Clean up title (remove specific phrases)
+    // Phrases: "روبولكس : ", " في لعبة روبلوكس", " في روبلوكس"
+    let cleaned = title.replace(/روبولكس : /g, "")
+                       .replace(/ في لعبة روبلوكس/g, "")
+                       .replace(/ في روبلوكس/g, "");
+
     // Regex to find @Handle (alphanumeric, underscore, dot, hyphen)
+    // Matches @FollowedByChars until a space or end of string or non-handle char
     const regex = /@([a-zA-Z0-9_.-]+)/g;
 
-    return title.replace(regex, (match, handle) => {
+    return cleaned.replace(regex, (match, handle) => {
         // Return a placeholder badge that we will hydrate asynchronously
         // We use a specific class and data attribute to find it later
         return `<a href="https://www.youtube.com/@${handle}" target="_blank" class="youtuber-badge pending-badge" data-handle="${handle}" onclick="event.stopPropagation();">
