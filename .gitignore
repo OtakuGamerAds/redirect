@@ -6,9 +6,6 @@
 .vscode/
 *.log
 
-# Firebase config (API Keys are public-safe, PAT is not here)
-# scripts/firebase-config.js (Un-ignored)
-
 
 # Functions dependencies
 functions/node_modules/
