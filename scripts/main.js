@@ -62,7 +62,13 @@ let enableRedirection = true; // Default
 async function loadConfig() {
   try {
     // Determine path to config based on current location
-    const isPagesDir = window.location.pathname.includes("/pages/");
+    // Check if we are in a subdirectory (any folder except root)
+    const isSubDir = window.location.pathname.split('/').length > 2 || (window.location.pathname !== '/' && !window.location.pathname.endsWith('index.html') && !window.location.pathname.endsWith('404.html'));
+    
+    // Simpler check: if we are in admin, about, contact, videos, article, redirect dirs
+    const path = window.location.pathname;
+    const isPagesDir = path.includes("/about/") || path.includes("/contact/") || path.includes("/videos/") || path.includes("/article/") || path.includes("/redirect/") || path.includes("/pages/"); // Keeping pages for back-compat if needed
+    
     // Cache busting: Append timestamp to force fresh fetch
     const configPath =
       (isPagesDir ? "../config/site-data.json" : "config/site-data.json") +

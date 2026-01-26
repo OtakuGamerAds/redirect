@@ -22,9 +22,9 @@
     "ads_message": "فريقي الإعلاني سيكون سعيداً بالتواصل معكم."
   },
   "nav": [
-    { "text": "الصفحة الرئيسية", "url": "index.html" },
-    { "text": "مواقع التواصل الاجتماعي", "url": "pages/about.html" },
-    { "text": "للإعلانات", "url": "pages/contact.html" },
-    { "text": "الفيديوهات", "url": "pages/videos.html" }
+    { "text": "الصفحة الرئيسية", "url": "./" },
+    { "text": "مواقع التواصل الاجتماعي", "url": "about/" },
+    { "text": "للإعلانات", "url": "contact/" },
+    { "text": "الفيديوهات", "url": "videos/" }
   ]
 }
