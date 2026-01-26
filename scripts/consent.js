@@ -34,8 +34,14 @@ function updateConsent(status) {
   gtag('consent', 'update', consentMode);
   localStorage.setItem('consent_status', status);
   
-  // If granted, we can reload to ensure everything fires if needed, 
-  // but usually 'update' is enough for GA4 to start collecting.
+  if (status === 'granted') {
+    // Microsoft Clarity
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "v7nf7q9wge");
+  }
 }
 
 function showBanner() {
