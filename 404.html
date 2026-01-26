@@ -33,25 +33,51 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="container">
-            <div class="logo">رحومي - Rahumi</div>
-            <ul class="nav-links" id="nav-list">
-                <!-- Javascript will populate this -->
-            </ul>
-             <div class="menu-toggle">☰</div>
+      <div class="container">
+        <div
+          class="logo-wrapper"
+          style="display: flex; align-items: center; gap: 1rem"
+        >
+          <div class="logo">رحومي - Rahumi</div>
+          <button
+            id="theme-toggle"
+            class="btn"
+            style="padding: 0.5rem 1rem; color: white"
+          >
+            <i id="theme-icon" class="fas fa-moon"></i>
+          </button>
         </div>
+        <ul class="nav-links" id="nav-list">
+          <!-- Javascript will populate this -->
+        </ul>
+        <div class="menu-toggle">☰</div>
+      </div>
     </nav>
 
-    <main class="container text-center" style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 60vh;">
-        <h1 style="font-size: 4rem; color: var(--primary-color);">404</h1>
-        <h2>الصفحة غير موجودة</h2>
-        <p style="color: var(--text-light); margin: 1rem 0;">عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.</p>
-        <a href="index.html" class="btn mt-lg">العودة للرئيسية</a>
+    <main
+      class="container text-center"
+      style="
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 60vh;
+      "
+    >
+      <h1 style="font-size: 6rem; color: var(--primary-color); margin-bottom: 0;">404</h1>
+      <h2 style="font-size: 2rem; margin-top: 0;">الصفحة غير موجودة</h2>
+      <p style="color: var(--text-light); margin: 1rem 0; font-size: 1.2rem;">
+        عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.
+      </p>
+      <a href="index.html" class="btn mt-lg" style="padding: 1rem 2rem; font-size: 1.1rem;">
+        <i class="fas fa-home" style="margin-left: 0.5rem;"></i>
+        العودة للرئيسية
+      </a>
     </main>
 
 
 
-    <script src="scripts/main.js?v=2"></script>
+    <script src="scripts/main.js?v=2" defer></script>
     <script src="scripts/consent.js"></script>
 </body>
 </html>
