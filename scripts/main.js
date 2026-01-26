@@ -777,6 +777,17 @@ async function loadArticlePage(isPagesDir) {
          } else {
              playBtn.href = item.map_link;
          }
+
+         // Analytics Tracking
+         playBtn.addEventListener("click", () => {
+           if (typeof gtag === "function") {
+             gtag("event", "play_game", {
+               item_name: item.map_name,
+               redirect_enabled: enableRedirection,
+               destination_url: playBtn.href,
+             });
+           }
+         });
         
         // Fetch Article Markdown
         let mdPath = `../assets/articles/${id}.md`;
