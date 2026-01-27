@@ -2,5 +2,8 @@
   "dependencies": {
     "@google/genai": "^1.38.0"
   },
+  "scripts": {
+    "dev": "npx serve src"
+  },
   "type": "module"
 }

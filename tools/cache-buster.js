@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration
-const rootDir = path.resolve(__dirname, '..');
+const rootDir = path.resolve(__dirname, '../src');
 const assets = [
     { type: 'script', path: 'scripts/main.js', pattern: /src="([^"]*scripts\/main\.js)(?:\?v=[^"]*)?"/g },
     { type: 'style', path: 'styles/main.css', pattern: /href="([^"]*styles\/main\.css)(?:\?v=[^"]*)?"/g }

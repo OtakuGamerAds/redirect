@@ -60,8 +60,8 @@ jobs:
             const linksData = {};
             
             // Ensure assets/articles directory exists
-            if (!fs.existsSync('assets/articles')) {
-                fs.mkdirSync('assets/articles', { recursive: true });
+            if (!fs.existsSync('src/assets/articles')) {
+                fs.mkdirSync('src/assets/articles', { recursive: true });
             }
 
             channelOrder.forEach(channel => {
@@ -76,7 +76,7 @@ jobs:
 
                     // If Article Content exists, write to file
                     if (item.article_content && videoId) {
-                        const filePath = `assets/articles/${videoId}.md`;
+                        const filePath = `src/assets/articles/${videoId}.md`;
                         fs.writeFileSync(filePath, item.article_content);
                         console.log(`📝 Wrote article for ${videoId}`);
                     }
@@ -91,10 +91,10 @@ jobs:
 
             // Write files
             fs.writeFileSync(
-              'config/links.json',
+              'src/config/links.json',
               JSON.stringify(linksData, null, 2)
             );
-            console.log('📄 config/links.json written!');
+            console.log('📄 src/config/links.json written!');
 
             console.log('🎉 Build complete!');
           }
@@ -112,4 +112,4 @@ jobs:
           commit_user_name: "Content Bot"
           commit_user_email: "actions@github.com"
           commit_author: "Content Bot <actions@github.com>"
-          file_pattern: "config/*.json assets/articles/*.md"
+          file_pattern: "src/config/*.json src/assets/articles/*.md"
