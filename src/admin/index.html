@@ -1106,7 +1106,7 @@
         // Fetch Title
         fetchVideoTitle(map.video_link).then((title) => {
           const titleEl = card.querySelector("h3");
-          const displayTitle = title || map.video_link || "No Title";
+          const displayTitle = title || 'Loading...';
 
           // Apply RTL if Arabic found
           setElementDirection(titleEl, displayTitle);
@@ -1371,7 +1371,6 @@
             : {};
 
           newMaps.push({
-            map_name: content.querySelector("h3").textContent,
             video_link: links[0].href,
             map_link: links[1].href,
             article_content: existingData.article_content || "",

@@ -635,7 +635,7 @@ function createMapCard(item) {
   // Title
   const title = document.createElement("h3");
   // Use innerHTML to allow badges
-  title.innerHTML = formatTitleWithBadges(item.map_name); // Fallback
+  title.innerHTML = 'Loading...';
   title.style.margin = "0";
   title.style.lineHeight = "1.8"; 
   title.classList.add("map-title"); 
@@ -783,7 +783,7 @@ async function loadArticlePage(isPagesDir) {
         if (!item) throw new Error("Video not found in database");
         
         // Update Metadata
-        document.title = `${item.map_name} - رحومي`;
+        document.title = `Loading... - رحومي`;
         // Async fetch accurate title if possible
         fetchVideoTitle(item.video_link).then(fetchedTitle => {
             if (fetchedTitle) {
@@ -799,7 +799,7 @@ async function loadArticlePage(isPagesDir) {
          const playBtn = document.getElementById("game-play-btn");
          const redirectPrefix = isPagesDir ? "../" : "";
          if (enableRedirection) {
-             playBtn.href = `${redirectPrefix}redirect/?key=${encodeURIComponent(item.map_name)}`;
+             playBtn.href = `${redirectPrefix}redirect/?id=${id}`;
          } else {
              playBtn.href = item.map_link;
          }
@@ -808,7 +808,6 @@ async function loadArticlePage(isPagesDir) {
          playBtn.addEventListener("click", () => {
            if (typeof gtag === "function") {
              gtag("event", "play_game", {
-               item_name: item.map_name,
                redirect_enabled: enableRedirection,
                destination_url: playBtn.href,
              });

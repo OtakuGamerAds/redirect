@@ -253,7 +253,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const key = urlParams.get('key');
+            const videoId = urlParams.get('id');
 
             const loadingState = document.getElementById('loading-state');
             const timerState = document.getElementById('timer-state');
@@ -262,7 +262,7 @@
             const continueBtn = document.getElementById('continue-btn');
             const countdownEl = document.getElementById('countdown');
 
-            if (!key) {
+            if (!videoId) {
                 showError();
                 return;
             }
@@ -279,12 +279,16 @@
                 }
 
                 if (allLinks.length > 0) {
-                    // Search in combined list
-                    const target = allLinks.find(item => item.map_name === key);
+                    // Search in combined list by extracting ID from video_link
+                    const target = allLinks.find(item => {
+                        const match = item.video_link && item.video_link.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
+                        return match && match[1] === videoId;
+                    });
+
                     if (target) {
                          startCountdown(target.map_link);
                     } else {
-                        console.warn('Key not found:', key);
+                        console.warn('Video ID not found:', videoId);
                         showError();
                     }
                 } else {
