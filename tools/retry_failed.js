@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
-const CREDENTIALS_PATH = 'credentials.json';
-const LINKS_PATH = 'config/links.json';
-const ARTICLES_DIR = path.join("assets", "articles");
-const REPORT_FILE = 'failed_report.md';
+const CREDENTIALS_PATH = path.resolve("credentials.json");
+const LINKS_PATH = path.resolve("src/config/links.json");
+const ARTICLES_DIR = path.resolve("src/assets/articles");
+const REPORT_FILE = path.resolve("failed_report.md");
 
 const SYSTEM_PROMPT = `
 ### **System Prompt: صانع مقالات رحومي الاحترافي**
@@ -60,111 +60,168 @@ const USER_PROMPT_TEMPLATE = `
 اكتب لي مقالة قصيرة عن هذه اللعبة في روبلوكس. المقالة سوف يتم وضعها في موقعي الخاص (انا اليوتيوبر الذي يلعب اللعبة في هذا الفيديو) قل في المقالة معلومات بسيطة عن ما هي هذه اللعبة مع ملاحظات ذكية قمت باكتشافها اثناء لعبي لها. المقالة يجب ان تكون مسلية ومفيدة (ليس فقط ملء للموقع، وانما شيء ذو قيمة عندما يقرأه المتابع يصبح يريد ان يقرأ المقالات الاخرى عن الألعاب الثانية قبل لعبهم) - يجب ان لا تكون طويلة لأن الفئة المستهدفة ليست كبيرة بالعمر وبالتالي لا تحب ان تقرأ كثيراً.
 `;
 
+// Helper to extract Video ID
 function getVideoId(url) {
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
-    return match ? match[1] : null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
+  return match ? match[1] : null;
+}
+
+// Queue Helper
+class Queue {
+  constructor(concurrency) {
+    this.concurrency = concurrency;
+    this.running = 0;
+    this.queue = [];
+  }
+
+  add(fn) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ fn, resolve, reject });
+      this.process();
+    });
+  }
+
+  process() {
+    if (this.running >= this.concurrency || this.queue.length === 0) return;
+
+    const { fn, resolve, reject } = this.queue.shift();
+    this.running++;
+
+    fn()
+      .then(resolve)
+      .catch(reject)
+      .finally(() => {
+        this.running--;
+        this.process();
+      });
+  }
+}
+
+async function retryArticle(ai, item) {
+    const videoId = item.videoId;
+    console.log(`⏳ Retrying: ${videoId}`);
+
+    const modelName = "gemini-2.5-pro"; // User requested model
+    const contents = [
+        {
+        role: "user",
+        parts: [
+            { fileData: { fileUri: item.video_link, mimeType: "video/mp4" } },
+            { text: USER_PROMPT_TEMPLATE },
+        ],
+        },
+    ];
+
+    try {
+        console.log(`➡️ Sending request for: ${videoId}`);
+        const response = await ai.models.generateContent({
+        model: modelName,
+        contents: contents,
+        config: {
+            systemInstruction: SYSTEM_PROMPT,
+            temperature: 0.7,
+            safetySettings: [
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+            {
+                category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold: "BLOCK_NONE",
+            },
+            {
+                category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold: "BLOCK_NONE",
+            },
+            ],
+        },
+        });
+        console.log(`⬅️ Received response for: ${videoId}`);
+
+        const generatedText = response.text;
+        if (!generatedText) {
+             let reason = "Unknown Error";
+             if (response.promptFeedback && response.promptFeedback.blockReason) {
+                reason = `Blocked: ${response.promptFeedback.blockReason}`;
+             }
+             throw new Error(reason);
+        }
+
+        const outputPath = path.join(ARTICLES_DIR, `${videoId}.md`);
+        fs.writeFileSync(outputPath, generatedText);
+        console.log(`✅ Success: ${videoId}`);
+        return { status: "success", item };
+    } catch (error) {
+        console.error(`❌ Failed: ${videoId} - ${error.message}`);
+        return { status: "error", item, error: error.message };
+    }
 }
 
 async function main() {
-    try {
-        console.log("🚀 Starting Retry Process...");
+  try {
+    console.log("🚀 Starting Retry Process...");
 
-        if (!fs.existsSync(CREDENTIALS_PATH)) throw new Error(`Credentials file not found`);
-        const { GEMINI_API_KEY } = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
-        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    if (!fs.existsSync(CREDENTIALS_PATH))
+      throw new Error(`Credentials file not found`);
+    const { GEMINI_API_KEY } = JSON.parse(
+      fs.readFileSync(CREDENTIALS_PATH, "utf8"),
+    );
+    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-        if (!fs.existsSync(LINKS_PATH)) throw new Error(`Links file not found`);
-        const linksData = JSON.parse(fs.readFileSync(LINKS_PATH, 'utf8'));
-        
-        // Target specifically "قناتي الثانية"
-        const channelVideos = linksData["قناتي الثانية"] || [];
-        
-        const failedItems = [];
+    if (!fs.existsSync(LINKS_PATH)) throw new Error(`Links file not found`);
+    const linksData = JSON.parse(fs.readFileSync(LINKS_PATH, "utf8"));
 
-        // Identify missing items
-        for (const item of channelVideos) {
-            const videoId = getVideoId(item.video_link);
-            if (!videoId) continue;
-            
-            const articlePath = path.join(ARTICLES_DIR, `${videoId}.md`);
-            if (!fs.existsSync(articlePath)) {
-                failedItems.push({ ...item, videoId });
-            }
-        }
+    // Target specifically "قناتي الثانية"
+    const channelVideos = linksData["قناتي الثانية"] || [];
 
-        console.log(`🔍 Found ${failedItems.length} missing/failed articles.`);
-        
-        if (failedItems.length === 0) {
-            console.log("✅ All articles exist! No retries needed.");
-            return;
-        }
+    const failedItems = [];
 
-        let reportContent = "# Batch Generation Failure Report\n\n";
+    // Identify missing items
+    for (const item of channelVideos) {
+      const videoId = getVideoId(item.video_link);
+      if (!videoId) continue;
 
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-        for (const [index, item] of failedItems.entries()) {
-            console.log(`[${index + 1}/${failedItems.length}] 🔄 Retrying: ${item.videoId}`);
-            
-            // Add significant delay to avoid 429 errors (40 seconds)
-            if (index > 0) await sleep(40000);
-
-            try {
-                const modelName = "gemini-2.5-pro";
-                const contents = [
-                    {
-                        role: 'user',
-                        parts: [
-                            { fileData: { fileUri: item.video_link, mimeType: "video/mp4" } },
-                            { text: USER_PROMPT_TEMPLATE }
-                        ]
-                    }
-                ];
-
-                const response = await ai.models.generateContent({
-                    model: modelName,
-                    contents: contents,
-                    config: {
-                        systemInstruction: SYSTEM_PROMPT,
-                        temperature: 0.7,
-                        safetySettings: [
-                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                        ]
-                    }
-                });
-
-                const generatedText = response.text;
-                
-                if (!generatedText) {
-                    let reason = "Unknown Error";
-                    if (response.promptFeedback && response.promptFeedback.blockReason) {
-                        reason = `Blocked: ${response.promptFeedback.blockReason}`;
-                    }
-                     throw new Error(reason);
-                }
-
-                const outputPath = path.join(ARTICLES_DIR, `${item.videoId}.md`);
-                fs.writeFileSync(outputPath, generatedText);
-                console.log(`✅ Success: ${item.videoId}`);
-
-            } catch (error) {
-                console.error(`❌ Failed Again: ${item.videoId} - ${error.message}`);
-                reportContent += `## Video: [${item.map_name}](${item.video_link})\n`;
-                reportContent += `- **Video ID**: ${item.videoId}\n`;
-                reportContent += `- **Error**: ${error.message}\n`;
-                reportContent += `- **Possible Cause**: Likely content safety filters or API limits.\n\n`;
-            }
-        }
-
-        fs.writeFileSync(REPORT_FILE, reportContent);
-        console.log(`\n📄 Report saved to ${REPORT_FILE}`);
-
-    } catch (error) {
-        console.error("Fatal Error:", error);
+      const articlePath = path.join(ARTICLES_DIR, `${videoId}.md`);
+      if (!fs.existsSync(articlePath)) {
+        failedItems.push({ ...item, videoId });
+      }
     }
+
+    console.log(`🔍 Found ${failedItems.length} missing/failed articles.`);
+
+    if (failedItems.length === 0) {
+      console.log("✅ All articles exist! No retries needed.");
+      return;
+    }
+
+    const queue = new Queue(3); // Concurrency limit 3
+    const results = [];
+
+    const tasks = failedItems.map(item => {
+        return queue.add(() => retryArticle(ai, item))
+            .then(res => results.push(res));
+    });
+
+    await Promise.all(tasks);
+
+    // Generate Report
+    let reportContent = "# Batch Generation Failure Report\n\n";
+    const errors = results.filter(r => r.status === "error");
+
+    for (const res of errors) {
+        const item = res.item;
+        reportContent += `## Video: [${item.map_name}](${item.video_link})\n`;
+        reportContent += `- **Video ID**: ${item.videoId}\n`;
+        reportContent += `- **Error**: ${res.error}\n`;
+        reportContent += `- **Possible Cause**: Likely content safety filters or API limits.\n\n`;
+    }
+
+    fs.writeFileSync(REPORT_FILE, reportContent);
+    console.log(`\n📄 Report saved to ${REPORT_FILE}`);
+    console.log(`✅ Fixed: ${results.filter(r => r.status === "success").length}`);
+    console.log(`❌ Still Failed: ${errors.length}`);
+
+  } catch (error) {
+    console.error("Fatal Error:", error);
+  }
 }
 
 main();
