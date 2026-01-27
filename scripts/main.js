@@ -237,7 +237,7 @@ function generateNav(navItems, isPagesDir) {
     a.textContent = item.text;
 
     // Special styling for Videos link to match toggle button
-    if (item.url.includes("videos.html")) {
+    if (item.url.includes("videos.html") || item.url.includes("videos/")) {
         a.classList.add("btn");
         a.style.padding = "0.5rem 1rem";
         a.style.color = "white";
@@ -303,7 +303,7 @@ function generateHomeNav(navItems) {
     a.style.textAlign = "center";
 
     // Add special animation class for Videos link + Joystick Emoji
-    if (item.url.includes("videos.html")) {
+    if (item.url.includes("videos.html") || item.url.includes("videos/")) {
       a.classList.add("videos-btn-animate");
       a.innerHTML = `${item.text} <span style="margin-right: 0.5rem;">🎮</span>`;
     }
