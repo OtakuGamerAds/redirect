@@ -834,13 +834,10 @@
           if (docSnap.exists() && docSnap.data().maps) {
             const data = docSnap.data();
             allChannelsData = data.maps;
-            // Use saved channel order if available, otherwise use keys
-            channelOrder = data.channelOrder || Object.keys(allChannelsData);
+            channelOrder = Object.keys(allChannelsData);
             console.log("Loaded from Firestore:", channelOrder);
           } else {
             // Fallback: Load from local links.json
-            loadingIndicator.textContent = "Loading from local JSON...";
-            // Fallback: Load from local links.json with cache busting
             loadingIndicator.textContent = "Loading from local JSON...";
             const response = await fetch(
               "../config/links.json?t=" + new Date().getTime(),
@@ -1106,7 +1103,7 @@
         // Fetch Title
         fetchVideoTitle(map.video_link).then((title) => {
           const titleEl = card.querySelector("h3");
-          const displayTitle = title || 'Loading...';
+          const displayTitle = title || "Loading...";
 
           // Apply RTL if Arabic found
           setElementDirection(titleEl, displayTitle);
@@ -1293,8 +1290,9 @@
           let fullData = docSnap.exists() ? docSnap.data() : {};
 
           // Update maps and channel order
+          // Update maps
           fullData.maps = allChannelsData;
-          fullData.channelOrder = channelOrder;
+          // fullData.channelOrder = channelOrder; // Removed to fix ordering issues
 
           // Save to Firestore
           await setDoc(docRef, fullData);
@@ -1327,16 +1325,16 @@
         }
       }
 
-        async function triggerGitHubAction() {
-            try {
-                const triggerAction = httpsCallable(functions, 'triggerGitHubAction');
-                const result = await triggerAction();
-                console.log('GitHub Action triggered successfully:', result.data);
-            } catch (error) {
-                console.error('Error triggering GitHub Action:', error);
-                throw new Error('Failed to trigger build: ' + error.message);
-            }
+      async function triggerGitHubAction() {
+        try {
+          const triggerAction = httpsCallable(functions, "triggerGitHubAction");
+          const result = await triggerAction();
+          console.log("GitHub Action triggered successfully:", result.data);
+        } catch (error) {
+          console.error("Error triggering GitHub Action:", error);
+          throw new Error("Failed to trigger build: " + error.message);
         }
+      }
 
       async function getGitHubToken() {
         // 1. Check LocalStorage
