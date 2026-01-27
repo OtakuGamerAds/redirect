@@ -288,28 +288,24 @@ function generateHomeNav(navItems) {
 
   container.innerHTML = "";
 
-  navItems.forEach((item) => {
-    // Skip "Home" button for homepage nav
-    if (item.url === "index.html" || item.url === "./") return;
+  // Directly find the Videos item
+  const videosItem = navItems.find((item) => item.url.includes("videos/") || item.url.includes("videos.html"));
 
+  if (videosItem) {
     const a = document.createElement("a");
-    a.href = item.url;
-    // Add text
-    a.textContent = item.text;
-
-    a.className = "btn";
+    a.href = videosItem.url;
+    
+    // Apply styling and animation class directly
+    a.className = "btn videos-btn-animate";
     a.style.width = "100%";
     a.style.display = "block";
     a.style.textAlign = "center";
-
-    // Add special animation class for Videos link + Joystick Emoji
-    if (item.url.includes("videos.html") || item.url.includes("videos/")) {
-      a.classList.add("videos-btn-animate");
-      a.innerHTML = `${item.text} <span style="margin-right: 0.5rem;">🎮</span>`;
-    }
+    
+    // Add text and emoji
+    a.innerHTML = `${videosItem.text} <span style="margin-right: 0.5rem;">🎮</span>`;
 
     container.appendChild(a);
-  });
+  }
 }
 
 // Variables for infinite scroll
