@@ -338,3 +338,23 @@ footer p {
   }
 }
 
+
+/* Article Timestamp Links */
+.timestamp-link {
+    color: var(--primary-color);
+    font-weight: bold;
+    cursor: pointer;
+    background-color: rgba(46, 204, 113, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent; /* Prepare for hover */
+}
+
+.timestamp-link:hover {
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

@@ -882,8 +882,21 @@ async function loadArticlePage(isPagesDir) {
                             }
 
                             if (player && typeof player.seekTo === 'function') {
-                                player.seekTo(seconds, true);
+                                // Logic: If not playing, play first, then seek.
+                                // seekTo(seconds, true) *should* play if already playing, but if paused/unstarted, it stays paused.
+                                // We want to force play.
+                                
+                                const playerState = player.getPlayerState();
+                                // -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (video cued)
+                                
                                 player.playVideo();
+                                
+                                // Seeking immediately might not work if unstarted, but let's try.
+                                // If it was unstarted (-1) or cued (5), we might need a small delay or trust the API.
+                                // The API docs say: "The player will play the video after seeking if the player was playing... Otherwise paused."
+                                // So we MUST call playVideo().
+                                
+                                player.seekTo(seconds, true);
                                 
                                 // Scroll video into view
                                 const videoWrapper = document.querySelector('.video-wrapper');
