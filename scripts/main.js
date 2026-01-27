@@ -62,13 +62,18 @@ let enableRedirection = true; // Default
 async function loadConfig() {
   try {
     // Determine path to config based on current location
-    // Check if we are in a subdirectory (any folder except root)
-    const isSubDir = window.location.pathname.split('/').length > 2 || (window.location.pathname !== '/' && !window.location.pathname.endsWith('index.html') && !window.location.pathname.endsWith('404.html'));
-    
-    // Simpler check: if we are in admin, about, contact, videos, article, redirect dirs
-    const path = window.location.pathname;
-    const isPagesDir = path.includes("/about/") || path.includes("/contact/") || path.includes("/videos/") || path.includes("/article/") || path.includes("/redirect/") || path.includes("/pages/"); // Keeping pages for back-compat if needed
-    
+    // Robust check: Look at how main.js was imported in the HTML.
+    // If imported as "../scripts/main.js", we are in a subdirectory.
+    let isPagesDir = false;
+    const scripts = document.getElementsByTagName('script');
+    for (let script of scripts) {
+        const src = script.getAttribute("src");
+        if (src && src.includes("scripts/main.js") && src.startsWith("../")) {
+            isPagesDir = true;
+            break;
+        }
+    }
+
     // Cache busting: Append timestamp to force fresh fetch
     const configPath =
       (isPagesDir ? "../config/site-data.json" : "config/site-data.json") +
@@ -88,21 +93,23 @@ async function loadConfig() {
         window.siteCollaborators = data.collaborators;
     }
 
-    populateContent(data);
+    populateContent(data, isPagesDir);
     generateNav(data.nav, isPagesDir);
     generateHomeNav(data.nav);
 
-    if (window.location.pathname.includes("videos.html")) {
+    // Check for Videos Page (matches both /videos/ and videos.html for backward compat)
+    if (window.location.pathname.includes("videos/") || window.location.pathname.includes("videos.html")) {
       // Dynamically set page title from nav config
-      const videosNav = data.nav.find((item) => item.url.includes("videos.html"));
+      // Look for nav item with "videos/" OR "videos.html"
+      const videosNav = data.nav.find((item) => item.url.includes("videos/") || item.url.includes("videos.html"));
       const pageTitle = document.getElementById("page-title");
       if (videosNav && pageTitle) {
         pageTitle.textContent = videosNav.text;
       }
-      loadRobloxMaps(isPagesDir); // Keeping function name for now as it handles logic
+      loadRobloxMaps(isPagesDir); 
     }
 
-    if (window.location.pathname.includes("article.html")) {
+    if (window.location.pathname.includes("article/") || window.location.pathname.includes("article.html")) {
         loadArticlePage(isPagesDir);
     }
   } catch (error) {
@@ -110,10 +117,10 @@ async function loadConfig() {
   }
 }
 
-function populateContent(data) {
+function populateContent(data, isPagesDir) {
   // Populate simple text fields with data-key attribute
   const elements = document.querySelectorAll("[data-key]");
-  const isPagesDir = window.location.pathname.includes("/pages/");
+  // const isPagesDir passed as argument now
 
   elements.forEach((el) => {
     const key = el.getAttribute("data-key");
@@ -217,13 +224,13 @@ function generateNav(navItems, isPagesDir) {
     // Adjust URL based on current depth
     let finalUrl = item.url;
     if (isPagesDir) {
-      if (item.url.startsWith("pages/")) {
-        finalUrl = item.url.replace("pages/", "");
-      } else {
-        finalUrl = "../" + item.url;
-      }
+       // If we are in a subdir, we need to go up one level for everything
+       // except if the url is meant to be absolute (http) which is not the case for nav items usually
+       if (!item.url.startsWith("http")) {
+            finalUrl = "../" + item.url;
+       }
     } else {
-      // In root, use canonical (no change needed if JSON has pages/...)
+      // In root, use canonical
     }
 
     a.href = finalUrl;
@@ -245,7 +252,8 @@ function generateNav(navItems, isPagesDir) {
     // Simple active check
     if (
       window.location.href.endsWith(finalUrl) ||
-      (finalUrl === "index.html" && window.location.pathname.endsWith("/"))
+      (finalUrl === "./" && window.location.pathname.endsWith("/")) ||
+      (finalUrl.endsWith("/") && window.location.pathname.includes(finalUrl))
     ) {
       a.classList.add("active");
     }
@@ -582,7 +590,18 @@ function createMapCard(item) {
   const videoId = getVideoId(item.video_link);
   if (videoId) {
       card.onclick = () => {
-          window.location.href = `article.html?id=${videoId}`;
+          // Check if we are in a subdirectory (like /videos/)
+          // Foolproof check: explicitly check path segments
+          const path = window.location.pathname;
+          // If we are in /videos/, /about/, /contact/, /article/, /redirect/
+          const isPagesDir = path.includes("/videos/") || 
+                             path.includes("/about/") || 
+                             path.includes("/contact/") || 
+                             path.includes("/article/") || 
+                             path.includes("/redirect/");
+
+          const target = isPagesDir ? "../article/" : "article/";
+          window.location.href = `${target}?id=${videoId}`;
       };
   }
 
@@ -776,10 +795,11 @@ async function loadArticlePage(isPagesDir) {
         const embedUrl = `https://www.youtube.com/embed/${id}`;
         document.getElementById("video-embed").src = embedUrl;
         
-        // Setup Play Button
+         // Setup Play Button
          const playBtn = document.getElementById("game-play-btn");
+         const redirectPrefix = isPagesDir ? "../" : "";
          if (enableRedirection) {
-             playBtn.href = `redirect.html?key=${encodeURIComponent(item.map_name)}`;
+             playBtn.href = `${redirectPrefix}redirect/?key=${encodeURIComponent(item.map_name)}`;
          } else {
              playBtn.href = item.map_link;
          }
@@ -830,7 +850,7 @@ async function loadArticlePage(isPagesDir) {
                 <div style="color: var(--text-color); text-align: center;">
                     <h3>عذراً!</h3>
                     <p>${err.message}</p>
-                    <a href="videos.html" class="btn" style="margin-top: 1rem;">العودة للفيديوهات</a>
+                    <a href="${isPagesDir ? '../videos/' : 'videos/'}" class="btn" style="margin-top: 1rem;">العودة للفيديوهات</a>
                 </div>
             `;
         }
