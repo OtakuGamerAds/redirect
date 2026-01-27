@@ -707,7 +707,22 @@
             />
           </div>
           <div class="form-group">
-            <label for="add-article-content">Article Content (Markdown)</label>
+            <label for="add-article-content">
+              Article Content (Markdown)
+              <button
+                type="button"
+                id="generate-article-btn"
+                class="btn"
+                style="
+                  margin-left: 10px;
+                  font-size: 0.8em;
+                  padding: 4px 12px;
+                  background-color: #7b1fa2;
+                "
+              >
+                ✨ Generate with AI
+              </button>
+            </label>
             <textarea id="add-article-content"></textarea>
           </div>
           <div class="modal-actions">
@@ -1335,6 +1350,51 @@
           throw new Error("Failed to trigger build: " + error.message);
         }
       }
+
+      // ==================== AI GENERATION ====================
+      const generateArticleBtn = document.getElementById("generate-article-btn");
+      generateArticleBtn.addEventListener("click", async () => {
+        const videoUrl = document.getElementById("add-video-link").value;
+        const textarea = document.getElementById("add-article-content");
+
+        if (!videoUrl) {
+          alert("Please enter a Video Link first.");
+          return;
+        }
+
+        if (
+          textarea.value &&
+          !confirm(
+            "This will overwrite the current content. Do you want to continue?",
+          )
+        ) {
+          return;
+        }
+
+        const originalText = generateArticleBtn.innerHTML;
+        generateArticleBtn.disabled = true;
+        generateArticleBtn.innerHTML = "⏳ Generating...";
+        textarea.placeholder = "🤖 AI is watching the video and writing...";
+
+        try {
+          const generate = httpsCallable(functions, "generateArticle");
+          const result = await generate({ videoUrl: videoUrl });
+
+          if (result.data.success && result.data.article) {
+            textarea.value = result.data.article;
+            markChanged(); // Mark as modified so user can save
+          } else {
+            throw new Error("No article returned.");
+          }
+        } catch (error) {
+          console.error("Generation failed:", error);
+          alert("Failed to generate article: " + error.message);
+          textarea.placeholder = "Error generating article.";
+        } finally {
+          generateArticleBtn.disabled = false;
+          generateArticleBtn.innerHTML = originalText;
+        }
+      });
 
       async function getGitHubToken() {
         // 1. Check LocalStorage
