@@ -1352,7 +1352,9 @@
       }
 
       // ==================== AI GENERATION ====================
-      const generateArticleBtn = document.getElementById("generate-article-btn");
+      const generateArticleBtn = document.getElementById(
+        "generate-article-btn",
+      );
       generateArticleBtn.addEventListener("click", async () => {
         const videoUrl = document.getElementById("add-video-link").value;
         const textarea = document.getElementById("add-article-content");
@@ -1377,7 +1379,9 @@
         textarea.placeholder = "🤖 AI is watching the video and writing...";
 
         try {
-          const generate = httpsCallable(functions, "generateArticle");
+          const generate = httpsCallable(functions, "generateArticle", {
+            timeout: 1200000,
+          });
           const result = await generate({ videoUrl: videoUrl });
 
           if (result.data.success && result.data.article) {
