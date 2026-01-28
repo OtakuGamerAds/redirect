@@ -963,7 +963,7 @@ async function loadArticlePage(isPagesDir) {
          });
         
         // Fetch Article Markdown
-        let mdPath = `../assets/articles/${id}.md`;
+        let mdPath = `../assets/articles/${id}.md?t=${new Date().getTime()}`;
         
         try {
             const mdResponse = await fetch(mdPath);
