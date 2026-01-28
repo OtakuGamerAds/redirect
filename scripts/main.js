@@ -757,19 +757,24 @@ function getRobloxPlaceId(url) {
 
 // Function to get game name
 async function getRobloxGameName(placeId) {
+    // We use a public proxy to bypass CORS restrictions
+    // This is similar to how the channel info fetch works (which uses microlink as a proxy)
+    const proxy = 'https://corsproxy.io/?'; 
+
     try {
         console.log(`Fetching Roblox game name for Place ID: ${placeId}`);
+        
         // Step 1: Get the Universe ID from the Place ID
-        // Note: Direct fetch might fail due to CORS. If so, we might need a proxy or backend function.
-        // We try direct first as requested.
-        const universeResponse = await fetch(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`); 
+        const universeUrl = `https://apis.roblox.com/universes/v1/places/${placeId}/universe`;
+        const universeResponse = await fetch(proxy + encodeURIComponent(universeUrl));
         
         if (!universeResponse.ok) throw new Error('Failed to get Universe ID');
         const universeData = await universeResponse.json();
         const universeId = universeData.universeId;
 
         // Step 2: Get the Game Name using the Universe ID
-        const gameResponse = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+        const gameUrl = `https://games.roblox.com/v1/games?universeIds=${universeId}`;
+        const gameResponse = await fetch(proxy + encodeURIComponent(gameUrl));
         
         if (!gameResponse.ok) throw new Error('Failed to get Game Details');
         const gameData = await gameResponse.json();
@@ -781,7 +786,7 @@ async function getRobloxGameName(placeId) {
         return gameName;
         
     } catch (error) {
-        console.error('Error fetching Roblox game name:', error.message);
+        console.warn('Error fetching Roblox game name:', error.message);
         return null;
     }
 }
