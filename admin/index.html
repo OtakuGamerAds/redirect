@@ -815,22 +815,17 @@
                 <!-- Progress Overlay -->
                 <div id="ai-progress" class="ai-progress-overlay">
                     <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">Creation in Progress...</h3>
-                    <div class="progress-steps">
-                        <div class="progress-step" id="step-1">
-                            <div class="step-icon"><i class="fas fa-video"></i></div>
-                            <span class="step-label">Watching Video (This takes time!)</span>
-                        </div>
-                        <div class="progress-step" id="step-2">
-                            <div class="step-icon"><i class="fas fa-brain"></i></div>
-                            <span class="step-label">Analyzing Gameplay & Secrets</span>
-                        </div>
-                        <div class="progress-step" id="step-3">
-                            <div class="step-icon"><i class="fas fa-pen-fancy"></i></div>
-                            <span class="step-label">Drafting Article</span>
-                        </div>
-                        <div class="progress-step" id="step-4">
-                            <div class="step-icon"><i class="fas fa-magic"></i></div>
-                            <span class="step-label">Polishing & Formatting</span>
+                    <div id="realtime-logs" style="
+                        width: 100%;
+                        max-width: 400px;
+                        background: rgba(0,0,0,0.05);
+                        border-radius: 8px;
+                        padding: 1rem;
+                        font-family: monospace;
+                        font-size: 0.9rem;
+                    ">
+                        <div class="log-entry" style="color: var(--text-color); margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">
+                            <i class="fas fa-satellite-dish"></i> Connecting to AI...
                         </div>
                     </div>
                     <p id="progress-timer" style="margin-top: 1.5rem; color: var(--text-light); font-size: 0.9rem; font-family: monospace;">00:00</p>
@@ -861,6 +856,7 @@
         doc,
         getDoc,
         setDoc,
+        onSnapshot,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
       import {
         getFunctions,
@@ -1469,19 +1465,13 @@
       );
       const aiProgress = document.getElementById("ai-progress");
       const progressTimer = document.getElementById("progress-timer");
+      const realtimeLogs = document.getElementById("realtime-logs");
 
-      function updateProgressStep(stepNumber) {
-          document.querySelectorAll('.progress-step').forEach((el, index) => {
-              const stepIndex = index + 1;
-              el.classList.remove('active', 'completed');
-              if (stepIndex < stepNumber) {
-                  el.classList.add('completed');
-                  el.querySelector('.step-icon').innerHTML = '<i class="fas fa-check"></i>';
-              } else if (stepIndex === stepNumber) {
-                  el.classList.add('active');
-                  // Restore original icon if needed, but for simplicity we keep usage
-              }
-          });
+      // Generate UUID helper
+      function uuidv4() {
+          return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+            (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+          );
       }
 
       generateArticleBtn.addEventListener("click", async () => {
@@ -1505,30 +1495,51 @@
         const originalText = generateArticleBtn.innerHTML;
         generateArticleBtn.disabled = true;
         
-        // Show Progress UI
+        // Setup Real-time Logging
+        const requestId = uuidv4();
         aiProgress.classList.add('show');
+        realtimeLogs.innerHTML = `<div class="log-entry" style="color: var(--text-color); margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">
+                            <i class="fas fa-satellite-dish"></i> Initializing request...
+                        </div>`;
+
+        // Start Timer
         let startTime = Date.now();
         let timerInterval = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
             const secs = (elapsed % 60).toString().padStart(2, '0');
             progressTimer.textContent = `${mins}:${secs}`;
-            
-            // Simulation Logic
-            if (elapsed > 10 && elapsed < 180) updateProgressStep(1); // Watching
-            if (elapsed >= 180 && elapsed < 240) updateProgressStep(2); // Analyzing
-            if (elapsed >= 240 && elapsed < 300) updateProgressStep(3); // Drafting
-            if (elapsed >= 300) updateProgressStep(4); // Polishing
-            
         }, 1000);
 
-        updateProgressStep(1); // Start at step 1
+        // Listen to Firestore
+        let unsubscribe;
+        try {
+            unsubscribe = onSnapshot(doc(db, "generation_logs", requestId), (docC) => {
+                if (docC.exists()) {
+                    const data = docC.data();
+                    const icon = data.type === 'error' ? 'fa-exclamation-circle' : (data.type === 'success' ? 'fa-check-circle' : 'fa-info-circle');
+                    const color = data.type === 'error' ? 'red' : (data.type === 'success' ? 'green' : 'var(--text-color)');
+                    
+                    const logEntry = document.createElement('div');
+                    logEntry.style.color = color;
+                    logEntry.style.marginBottom = '0.5rem';
+                    logEntry.style.paddingBottom = '0.5rem';
+                    logEntry.style.borderBottom = '1px solid rgba(0,0,0,0.1)';
+                    logEntry.innerHTML = `<i class="fas ${icon}"></i> ${data.message}`;
+                    realtimeLogs.appendChild(logEntry);
+                    // Scroll to bottom
+                    realtimeLogs.scrollTop = realtimeLogs.scrollHeight;
+                }
+            });
+        } catch (e) {
+            console.error("Failed to subscribe to logs:", e);
+        }
 
         try {
           const generate = httpsCallable(functions, "generateArticle", {
             timeout: 1200000,
           });
-          const result = await generate({ videoUrl: videoUrl });
+          const result = await generate({ videoUrl: videoUrl, requestId: requestId });
 
           if (result.data.success && result.data.article) {
             textarea.value = result.data.article;
@@ -1542,15 +1553,10 @@
           textarea.placeholder = "Error generating article.";
         } finally {
           clearInterval(timerInterval);
+          if (unsubscribe) unsubscribe(); // Stop listening
           aiProgress.classList.remove('show');
           generateArticleBtn.disabled = false;
           generateArticleBtn.innerHTML = originalText;
-          
-          // Reset icons logic optionally here, or just reset on next open
-          document.querySelectorAll('.progress-step').forEach((el, index) => {
-             const originalIcons = ['fa-video', 'fa-brain', 'fa-pen-fancy', 'fa-magic'];
-             el.querySelector('.step-icon').innerHTML = `<i class="fas ${originalIcons[index]}"></i>`;
-          });
         }
       });
 
