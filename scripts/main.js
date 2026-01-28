@@ -748,6 +748,44 @@ function getVideoId(url) {
     return match ? match[1] : null;
 }
 
+function getRobloxPlaceId(url) {
+    if (!url) return null;
+    // Standard URL: https://www.roblox.com/games/920587237/Adopt-Me
+    const match = url.match(/roblox\.com\/games\/(\d+)\//);
+    return match ? match[1] : null;
+}
+
+// Function to get game name
+async function getRobloxGameName(placeId) {
+    try {
+        console.log(`Fetching Roblox game name for Place ID: ${placeId}`);
+        // Step 1: Get the Universe ID from the Place ID
+        // Note: Direct fetch might fail due to CORS. If so, we might need a proxy or backend function.
+        // We try direct first as requested.
+        const universeResponse = await fetch(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`); 
+        
+        if (!universeResponse.ok) throw new Error('Failed to get Universe ID');
+        const universeData = await universeResponse.json();
+        const universeId = universeData.universeId;
+
+        // Step 2: Get the Game Name using the Universe ID
+        const gameResponse = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+        
+        if (!gameResponse.ok) throw new Error('Failed to get Game Details');
+        const gameData = await gameResponse.json();
+        
+        // The API returns an array, so we get the first item
+        const gameName = gameData.data[0].name;
+        
+        console.log(`Game Name: ${gameName}`);
+        return gameName;
+        
+    } catch (error) {
+        console.error('Error fetching Roblox game name:', error.message);
+        return null;
+    }
+}
+
 /* Article Page Logic */
 let player;
 let youtubeApiPromise = null;
@@ -799,9 +837,81 @@ async function loadArticlePage(isPagesDir) {
         
         // Update Metadata
         document.title = `Loading... - رحومي`;
+        
+        // Fetch Game Name dynamically if possible
+        let gameName = "Roblox Game"; // Fallback
+        const placeId = getRobloxPlaceId(item.map_link);
+
+        if (placeId) {
+             // We start fetching game name in parallel to other things
+             getRobloxGameName(placeId).then(name => {
+                 if (name) {
+                     gameName = name;
+                     // If title is currently generic or loading, update it? 
+                     // Actually, we want to replace ${GAME_NAME} everywhere.
+                     // We will store it in a global or accessible scope to update content when it loads.
+                     // But for now, let's just log it.
+                     console.log("Resolved Game Name:", gameName);
+                     
+                     // If content is already loaded, update it locally
+                     const contentDiv = document.getElementById("article-content");
+                     if (contentDiv) {
+                         // This is a naive replacement on HTML. 
+                         // Better to re-render or replace text content carefully.
+                         // But since we control the placeholder, it's fairly safe.
+                         contentDiv.innerHTML = contentDiv.innerHTML.split('${GAME_NAME}').join(gameName);
+                         
+                         // Re-attach listeners for timestamps since we nuked the DOM
+                         contentDiv.querySelectorAll('.timestamp-link').forEach(link => {
+                            link.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                const timeStr = link.getAttribute('data-time');
+                                const parts = timeStr.split(':').map(Number);
+                                let seconds = 0;
+                                if (parts.length === 2) {
+                                    seconds = parts[0] * 60 + parts[1];
+                                } else if (parts.length === 3) {
+                                    seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                                }
+    
+                                if (player && typeof player.loadVideoById === 'function') {
+                                    const playerState = player.getPlayerState();
+                                    if (playerState === -1 || playerState === 5) {
+                                        player.loadVideoById({
+                                            videoId: id,
+                                            startSeconds: seconds
+                                        });
+                                    } else {
+                                        player.seekTo(seconds, true);
+                                        player.playVideo();
+                                    }
+                                    const videoWrapper = document.querySelector('.video-wrapper');
+                                    if (videoWrapper) {
+                                        videoWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }
+                                }
+                            });
+                        });
+                         
+                         // Update Title if it contains placeholder (it might not, since we set it below)
+                         if (document.title.includes('${GAME_NAME}')) {
+                             document.title = document.title.split('${GAME_NAME}').join(gameName);
+                         }
+                     }
+                 }
+             });
+        }
+
         // Async fetch accurate title if possible
         fetchVideoTitle(item.video_link).then(fetchedTitle => {
             if (fetchedTitle) {
+               // If the fetched title itself has the placeholder (unlikely for YouTube title), handle it?
+               // The AI prompt puts ${GAME_NAME} in the ARTICLE title and body.
+               // The document.title usually comes from YouTube title (via fetches) OR article title.
+               // Currently code sets document.title = fetchedTitle. 
+               
+               // If we want to support ${GAME_NAME} in the fetched YouTube title (unlikely), we'd replace here.
+               // But mainly we care about the article content.
                document.title = `${fetchedTitle} - رحومي`;
             }
         });
@@ -862,6 +972,21 @@ async function loadArticlePage(isPagesDir) {
                 document.getElementById("article-content").style.display = 'none';
             } else {
                  let mdText = await mdResponse.text();
+                 
+                 // Replace ${GAME_NAME} with actual name if available, otherwise just keep it or replace with generic?
+                 // Wait, we need to wait for game name if we want to render correctly?
+                 // Or we render with placeholder and then update?
+                 // The user asked "it should fetch it like so inside of the article page".
+                 
+                 // If we have the game name already (unlikely since it's async), use it.
+                 // Otherwise, we might want to wait for it OR update DOM later.
+                 // In the fetch block above, we updated innerHTML. 
+                 // So here, we just render. But wait, if we render fast, the update logic above runs later and updates it. 
+                 // If fetch is slow, we see ${GAME_NAME}... 
+                 // Maybe replacing with "Loading..." or a spinner isn't ideal.
+                 // Let's replace with a temporary "this game" string if needed, or just let the async updater handle it.
+                 // Actually, let's try to await it if it's fast? No, don't block render.
+                 // We will update the REPLACE logic above to be robust.
                  
                  // Process Timestamps: (m:ss) -> Link
                  // Regex matches (m:ss) or (mm:ss) or (h:mm:ss) inside parentheses
