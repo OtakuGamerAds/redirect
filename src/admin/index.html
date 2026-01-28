@@ -549,6 +549,93 @@
         border-color: #444;
         color: #ddd;
       }
+
+      /* ==================== AI GENERATION PROGRESS ==================== */
+      .ai-progress-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        z-index: 10;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        padding: 2rem;
+      }
+
+      [data-theme="dark"] .ai-progress-overlay {
+        background: rgba(30, 30, 30, 0.95);
+      }
+
+      .ai-progress-overlay.show {
+        display: flex;
+      }
+
+      .progress-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .progress-step {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        opacity: 0.5;
+        transition: all 0.3s ease;
+      }
+
+      .progress-step.active {
+        opacity: 1;
+        transform: scale(1.02);
+      }
+
+      .progress-step.completed {
+        opacity: 0.8;
+      }
+
+      .step-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--surface-color);
+        border: 2px solid var(--text-light);
+        color: var(--text-light);
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+      }
+
+      .progress-step.active .step-icon {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        animation: pulse 1.5s infinite;
+      }
+
+      .progress-step.completed .step-icon {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+      }
+
+      .step-label {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(136, 192, 166, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0); }
+      }
     </style>
     <script>
       function initTheme() {
@@ -707,8 +794,43 @@
             />
           </div>
           <div class="form-group">
-            <label for="add-article-content">Article Content (Markdown)</label>
-            <textarea id="add-article-content"></textarea>
+            <label for="add-article-content">
+              Article Content (Markdown)
+              <button
+                type="button"
+                id="generate-article-btn"
+                class="btn"
+                style="
+                  margin-left: 10px;
+                  font-size: 0.8em;
+                  padding: 4px 12px;
+                  background-color: #7b1fa2;
+                "
+              >
+                ✨ Generate with AI
+              </button>
+            </label>
+            <div style="position: relative;">
+                <textarea id="add-article-content"></textarea>
+                <!-- Progress Overlay -->
+                <div id="ai-progress" class="ai-progress-overlay">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">Creation in Progress...</h3>
+                    <div id="realtime-logs" style="
+                        width: 100%;
+                        max-width: 400px;
+                        background: rgba(0,0,0,0.05);
+                        border-radius: 8px;
+                        padding: 1rem;
+                        font-family: monospace;
+                        font-size: 0.9rem;
+                    ">
+                        <div class="log-entry" style="color: var(--text-color); margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">
+                            <i class="fas fa-satellite-dish"></i> Connecting to AI...
+                        </div>
+                    </div>
+                    <p id="progress-timer" style="margin-top: 1.5rem; color: var(--text-light); font-size: 0.9rem; font-family: monospace;">00:00</p>
+                </div>
+            </div>
           </div>
           <div class="modal-actions">
             <button type="button" id="cancel-add-btn" class="btn btn-secondary">
@@ -734,6 +856,7 @@
         doc,
         getDoc,
         setDoc,
+        onSnapshot,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
       import {
         getFunctions,
@@ -1335,6 +1458,115 @@
           throw new Error("Failed to trigger build: " + error.message);
         }
       }
+
+      // ==================== AI GENERATION ====================
+      const generateArticleBtn = document.getElementById(
+        "generate-article-btn",
+      );
+      const aiProgress = document.getElementById("ai-progress");
+      const progressTimer = document.getElementById("progress-timer");
+      const realtimeLogs = document.getElementById("realtime-logs");
+
+      // Generate UUID helper
+      function uuidv4() {
+          return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+            (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+          );
+      }
+
+      generateArticleBtn.addEventListener("click", async () => {
+        const videoUrl = document.getElementById("add-video-link").value;
+        const textarea = document.getElementById("add-article-content");
+
+        if (!videoUrl) {
+          alert("Please enter a Video Link first.");
+          return;
+        }
+
+        if (
+          textarea.value &&
+          !confirm(
+            "This will overwrite the current content. Do you want to continue?",
+          )
+        ) {
+          return;
+        }
+
+        const originalText = generateArticleBtn.innerHTML;
+        generateArticleBtn.disabled = true;
+        
+        // Setup Real-time Logging
+        const requestId = uuidv4();
+        aiProgress.classList.add('show');
+        realtimeLogs.innerHTML = `<div class="log-entry" style="color: var(--text-color); margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">
+                            <i class="fas fa-satellite-dish"></i> Initializing request...
+                        </div>`;
+
+        // Start Timer
+        let startTime = Date.now();
+        let timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            progressTimer.textContent = `${mins}:${secs}`;
+        }, 1000);
+
+        // Listen to Firestore
+        let unsubscribe;
+        try {
+            console.log("Subscribing to logs for requestId:", requestId);
+            unsubscribe = onSnapshot(doc(db, "generation_logs", requestId), (docC) => {
+                console.log("Snapshot update:", docC.exists(), docC.data()); // DEBUG log
+                if (docC.exists()) {
+                    const data = docC.data();
+                    const icon = data.type === 'error' ? 'fa-exclamation-circle' : (data.type === 'success' ? 'fa-check-circle' : 'fa-info-circle');
+                    const color = data.type === 'error' ? 'red' : (data.type === 'success' ? 'green' : 'var(--text-color)');
+                    
+                    const logEntry = document.createElement('div');
+                    logEntry.style.color = color;
+                    logEntry.style.marginBottom = '0.5rem';
+                    logEntry.style.paddingBottom = '0.5rem';
+                    logEntry.style.borderBottom = '1px solid rgba(0,0,0,0.1)';
+                    logEntry.innerHTML = `<i class="fas ${icon}"></i> ${data.message}`;
+                    realtimeLogs.appendChild(logEntry);
+                    // Scroll to bottom
+                    realtimeLogs.scrollTop = realtimeLogs.scrollHeight;
+                }
+            }, (error) => {
+                console.error("Snapshot listener error:", error);
+                const logEntry = document.createElement('div');
+                logEntry.style.color = 'red';
+                logEntry.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Log connection failed: ${error.message}`;
+                realtimeLogs.appendChild(logEntry);
+            });
+        } catch (e) {
+            console.error("Failed to subscribe to logs:", e);
+        }
+
+        try {
+          const generate = httpsCallable(functions, "generateArticle", {
+            timeout: 1200000,
+          });
+          const result = await generate({ videoUrl: videoUrl, requestId: requestId });
+
+          if (result.data.success && result.data.article) {
+            textarea.value = result.data.article;
+            markChanged(); // Mark as modified so user can save
+          } else {
+            throw new Error("No article returned.");
+          }
+        } catch (error) {
+          console.error("Generation failed:", error);
+          alert("Failed to generate article: " + error.message);
+          textarea.placeholder = "Error generating article.";
+        } finally {
+          clearInterval(timerInterval);
+          if (unsubscribe) unsubscribe(); // Stop listening
+          aiProgress.classList.remove('show');
+          generateArticleBtn.disabled = false;
+          generateArticleBtn.innerHTML = originalText;
+        }
+      });
 
       async function getGitHubToken() {
         // 1. Check LocalStorage
