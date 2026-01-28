@@ -759,43 +759,28 @@ function getRobloxPlaceId(url) {
 // Function to get game name
 async function getRobloxGameName(placeId) {
     // We use a public proxy to bypass CORS restrictions
-    // This is similar to how the channel info fetch works (which uses microlink as a proxy)
     const proxy = 'https://corsproxy.io/?'; 
 
     try {
-        console.log(`[getRobloxGameName] Fetching for Place ID: ${placeId}`);
-        
         // Step 1: Get the Universe ID from the Place ID
         const universeUrl = `https://apis.roblox.com/universes/v1/places/${placeId}/universe`;
-        console.log(`[getRobloxGameName] Universe URL: ${proxy}${encodeURIComponent(universeUrl)}`);
-        
         const universeResponse = await fetch(proxy + encodeURIComponent(universeUrl));
-        console.log(`[getRobloxGameName] Universe response status: ${universeResponse.status}`);
         
         if (!universeResponse.ok) throw new Error('Failed to get Universe ID');
         const universeData = await universeResponse.json();
-        console.log(`[getRobloxGameName] Universe data:`, universeData);
         const universeId = universeData.universeId;
 
         // Step 2: Get the Game Name using the Universe ID
         const gameUrl = `https://games.roblox.com/v1/games?universeIds=${universeId}`;
-        console.log(`[getRobloxGameName] Game URL: ${proxy}${encodeURIComponent(gameUrl)}`);
-        
         const gameResponse = await fetch(proxy + encodeURIComponent(gameUrl));
-        console.log(`[getRobloxGameName] Game response status: ${gameResponse.status}`);
         
         if (!gameResponse.ok) throw new Error('Failed to get Game Details');
         const gameData = await gameResponse.json();
-        console.log(`[getRobloxGameName] Game data:`, gameData);
         
-        // The API returns an array, so we get the first item
-        const gameName = gameData.data[0].name;
-        
-        console.log(`[getRobloxGameName] SUCCESS! Game Name: ${gameName}`);
-        return gameName;
+        return gameData.data[0].name;
         
     } catch (error) {
-        console.error('[getRobloxGameName] ERROR:', error);
+        console.warn('Error fetching Roblox game name:', error.message);
         return null;
     }
 }
@@ -947,13 +932,9 @@ async function loadArticlePage(isPagesDir) {
 
                     // Update hooks when API returns
                     gameNamePromise.then(name => {
-                        console.log("gameNamePromise resolved with:", name);
-                        console.log("Checking if we should update:", name && name !== "Roblox Game");
-                        const targets = document.querySelectorAll('.dynamic-game-name');
-                        console.log("Found", targets.length, "dynamic-game-name elements");
                         if (name && name !== "Roblox Game") {
+                            const targets = document.querySelectorAll('.dynamic-game-name');
                             targets.forEach(el => el.textContent = name);
-                            console.log("Updated game names to:", name);
                         }
                     });
 
