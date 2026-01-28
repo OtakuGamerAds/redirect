@@ -786,7 +786,11 @@ async function getRobloxGameName(placeId) {
     }
 }
 
-
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 /* Article Page Logic */
 let player;
@@ -861,7 +865,7 @@ async function loadArticlePage(isPagesDir) {
                          // This is a naive replacement on HTML. 
                          // Better to re-render or replace text content carefully.
                          // But since we control the placeholder, it's fairly safe.
-                         contentDiv.innerHTML = contentDiv.innerHTML.split('${GAME_NAME}').join(gameName);
+                         contentDiv.innerHTML = contentDiv.innerHTML.split('${GAME_NAME}').join(escapeHtml(gameName));
                          
                          // Re-attach listeners for timestamps since we nuked the DOM
                          contentDiv.querySelectorAll('.timestamp-link').forEach(link => {
