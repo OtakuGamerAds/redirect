@@ -938,8 +938,11 @@ async function loadArticlePage(isPagesDir) {
 
                     // Update hooks when API returns
                     gameNamePromise.then(name => {
+                        console.log("gameNamePromise resolved with:", name);
+                        console.log("Checking if we should update:", name && name !== "Roblox Game");
+                        const targets = document.querySelectorAll('.dynamic-game-name');
+                        console.log("Found", targets.length, "dynamic-game-name elements");
                         if (name && name !== "Roblox Game") {
-                            const targets = document.querySelectorAll('.dynamic-game-name');
                             targets.forEach(el => el.textContent = name);
                             console.log("Updated game names to:", name);
                         }
