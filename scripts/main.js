@@ -917,10 +917,6 @@ async function loadArticlePage(isPagesDir) {
             } else {
                  let mdText = await mdResponse.text();
                  
-                 // Progressive Enhancement: Replace placeholder with a hook
-                 // Use "Roblox Game" as the default text, which will be overwritten if the API succeeds
-                 mdText = mdText.replace(/\$\{GAME_NAME\}/g, `<span class="dynamic-game-name">Roblox Game</span>`);
-                 
                  // Process Timestamps: (m:ss) -> Link
                  // Regex matches (m:ss) or (mm:ss) or (h:mm:ss) inside parentheses
                  const timestampRegex = /\((\d{1,2}:\d{2}(?::\d{2})?)\)/g;
@@ -931,7 +927,13 @@ async function loadArticlePage(isPagesDir) {
                  // Convert Markdown to HTML
                 if (typeof marked !== 'undefined') {
                     const contentDiv = document.getElementById("article-content");
-                    contentDiv.innerHTML = marked.parse(mdText);
+                    let parsedHtml = marked.parse(mdText);
+                    
+                    // Progressive Enhancement: Replace placeholder with a hook AFTER parsing
+                    // This ensures the span is not escaped by the markdown parser.
+                    parsedHtml = parsedHtml.replace(/\$\{GAME_NAME\}/g, `<span class="dynamic-game-name">Roblox Game</span>`);
+                    
+                    contentDiv.innerHTML = parsedHtml;
                     contentDiv.style.display = 'block';
 
                     // Update hooks when API returns
