@@ -1514,7 +1514,9 @@
         // Listen to Firestore
         let unsubscribe;
         try {
+            console.log("Subscribing to logs for requestId:", requestId);
             unsubscribe = onSnapshot(doc(db, "generation_logs", requestId), (docC) => {
+                console.log("Snapshot update:", docC.exists(), docC.data()); // DEBUG log
                 if (docC.exists()) {
                     const data = docC.data();
                     const icon = data.type === 'error' ? 'fa-exclamation-circle' : (data.type === 'success' ? 'fa-check-circle' : 'fa-info-circle');
@@ -1530,6 +1532,12 @@
                     // Scroll to bottom
                     realtimeLogs.scrollTop = realtimeLogs.scrollHeight;
                 }
+            }, (error) => {
+                console.error("Snapshot listener error:", error);
+                const logEntry = document.createElement('div');
+                logEntry.style.color = 'red';
+                logEntry.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Log connection failed: ${error.message}`;
+                realtimeLogs.appendChild(logEntry);
             });
         } catch (e) {
             console.error("Failed to subscribe to logs:", e);
