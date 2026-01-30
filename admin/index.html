@@ -947,6 +947,38 @@
         await signOut(auth);
       });
 
+      // ==================== HELPER: RETRY LOGIC ====================
+      async function getDocWithRetry(docRef, retries = 3, delay = 1000) {
+        try {
+          return await getDoc(docRef);
+        } catch (error) {
+          // Check for offline/connection errors
+          const isOffline =
+            error.message.includes("offline") ||
+            error.code === "unavailable" ||
+            error.message.includes("network");
+
+          if (retries > 0 && isOffline) {
+            console.warn(
+              `Firestore getDoc failed. Retrying in ${delay}ms...`,
+              error,
+            );
+
+            // Optional: Update loading text
+            if (
+              loadingIndicator &&
+              !loadingIndicator.classList.contains("hidden")
+            ) {
+              loadingIndicator.textContent = `Connection unstable. Retrying... (${retries} attempts left)`;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            return getDocWithRetry(docRef, retries - 1, delay * 1.5); // Backoff
+          }
+          throw error;
+        }
+      }
+
       // ==================== LOAD CONTENT ====================
       async function loadContent() {
         loadingIndicator.classList.remove("hidden");
@@ -955,7 +987,7 @@
         try {
           // Try Firestore first
           const docRef = doc(db, "content", "main");
-          const docSnap = await getDoc(docRef);
+          const docSnap = await getDocWithRetry(docRef);
 
           if (docSnap.exists() && docSnap.data().maps) {
             const data = docSnap.data();
