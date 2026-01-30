@@ -759,7 +759,8 @@ function getRobloxPlaceId(url) {
 // Function to get game name
 async function getRobloxGameName(placeId) {
     // We use a public proxy to bypass CORS restrictions
-    const proxy = 'https://corsproxy.io/?'; 
+    // 'corsproxy.io' was blocked (403), switching to 'api.codetabs.com'
+    const proxy = 'https://api.codetabs.com/v1/proxy?quest='; 
 
     try {
         // Step 1: Get the Universe ID from the Place ID
