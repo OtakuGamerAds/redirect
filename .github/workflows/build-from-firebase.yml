@@ -113,3 +113,13 @@ jobs:
           commit_user_email: "actions@github.com"
           commit_author: "Content Bot <actions@github.com>"
           file_pattern: "src/config/*.json src/assets/articles/*.md"
+
+      - name: Run Cache Buster
+        run: node tools/cache-buster.js
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./src
+          publish_branch: gh-pages
