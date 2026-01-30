@@ -926,7 +926,12 @@ async function loadArticlePage(isPagesDir) {
                     
                     // Progressive Enhancement: Replace placeholder with a hook AFTER parsing
                     // This ensures the span is not escaped by the markdown parser.
-                    parsedHtml = parsedHtml.replace(/\$\{GAME_NAME\}/g, `<span class="dynamic-game-name">Roblox Game</span>`);
+                    parsedHtml = parsedHtml.replace(/\$\{GAME_NAME\}/g, `
+                        <span class="dynamic-game-name youtuber-badge" style="cursor: default; text-decoration: none;">
+                            <i class="fas fa-gamepad" style="margin-left:5px;"></i>
+                            <span class="game-name-text">جاري تحميل اسم اللعبة...</span>
+                        </span>
+                    `);
                     
                     contentDiv.innerHTML = parsedHtml;
                     contentDiv.style.display = 'block';
@@ -934,7 +939,7 @@ async function loadArticlePage(isPagesDir) {
                     // Update hooks when API returns
                     gameNamePromise.then(name => {
                         if (name && name !== "Roblox Game") {
-                            const targets = document.querySelectorAll('.dynamic-game-name');
+                            const targets = document.querySelectorAll('.dynamic-game-name .game-name-text');
                             targets.forEach(el => el.textContent = name);
                         }
                     });
