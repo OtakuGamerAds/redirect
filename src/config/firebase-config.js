@@ -19,5 +19,5 @@ export const firebaseConfig = {
 
     // GitHub Integration Config (Public)
     githubOwner: "OtakuGamerAds",
-    githubRepo: "redirect"
+    githubRepo: "rahumi"
 };

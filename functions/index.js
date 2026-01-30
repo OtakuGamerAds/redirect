@@ -39,7 +39,7 @@ exports.triggerGitHubAction = onCall(
 
         // 3. Trigger the GitHub Action
         const owner = "OtakuGamerAds";
-        const repo = "redirect";
+        const repo = "rahumi";
         const workflowFile = "build-from-firebase.yml";
 
         try {

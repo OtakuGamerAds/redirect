@@ -1,6 +1,6 @@
 {
-  "name": "redirect-functions",
-  "description": "Cloud Functions for Rahumi Redirect Admin",
+  "name": "rahumi-functions",
+  "description": "Cloud Functions for Rahumi Website",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
