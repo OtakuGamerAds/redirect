@@ -357,6 +357,8 @@ async function fetchAndRenderMaps(isPagesDir) {
       "?t=" +
       new Date().getTime();
 
+    console.log("[DEBUG] fetchAndRenderMaps: configPath =", configPath);
+
     const response = await fetch(configPath);
     if (!response.ok)
       throw new Error(
@@ -364,6 +366,14 @@ async function fetchAndRenderMaps(isPagesDir) {
       );
 
     allMapsDataFull = await response.json();
+    console.log(
+      "[DEBUG] fetchAndRenderMaps: allMapsDataFull keys =",
+      Object.keys(allMapsDataFull),
+    );
+    console.log(
+      "[DEBUG] fetchAndRenderMaps: allMapsDataFull structure =",
+      allMapsDataFull,
+    );
 
     // Render Buttons from Keys (sorted by list_number)
     renderChannelButtons();
@@ -401,12 +411,28 @@ function resetAndRender() {
   grid.innerHTML = ""; // Clear existing content
   loadedCount = 0;
 
+  console.log("[DEBUG] resetAndRender: currentChannel =", currentChannel);
+  console.log(
+    "[DEBUG] resetAndRender: allMapsDataFull[currentChannel] =",
+    allMapsDataFull[currentChannel],
+  );
+
   if (currentChannel && allMapsDataFull[currentChannel]) {
     // Access the links array from the new structure
     allMapsData =
       allMapsDataFull[currentChannel].links || allMapsDataFull[currentChannel];
+    console.log(
+      "[DEBUG] resetAndRender: allMapsData length =",
+      allMapsData.length,
+    );
+    console.log("[DEBUG] resetAndRender: allMapsData =", allMapsData);
+    console.log(
+      "[DEBUG] resetAndRender: Is allMapsData an array?",
+      Array.isArray(allMapsData),
+    );
     appendMaps(); // Load first batch
   } else {
+    console.log("[DEBUG] resetAndRender: No channel found!");
     grid.innerHTML = "<p>No channels found.</p>";
   }
 }
@@ -469,6 +495,8 @@ function updateBadgeUI(badge, name, avatar, url) {
 }
 
 function createMapCard(item) {
+  console.log("[DEBUG] createMapCard: Creating card for item =", item);
+
   const card = document.createElement("div");
   card.className = "map-card";
   card.style.padding = "0";
@@ -488,6 +516,12 @@ function createMapCard(item) {
 
   // Click Action
   const videoId = getVideoId(item.video_link);
+  console.log(
+    "[DEBUG] createMapCard: videoId =",
+    videoId,
+    "from",
+    item.video_link,
+  );
   if (videoId) {
     card.onclick = () => {
       // Check if we are in a subdirectory (like /videos/)
@@ -544,12 +578,32 @@ function createMapCard(item) {
   processBadges(title);
 
   // Async fetch title
-  fetchVideoTitle(item.video_link).then((fetchedTitle) => {
-    if (fetchedTitle) {
-      title.innerHTML = formatTitleWithBadges(fetchedTitle);
-      processBadges(title);
-    }
-  });
+  console.log("[DEBUG] createMapCard: Fetching title for", item.video_link);
+  fetchVideoTitle(item.video_link)
+    .then((fetchedTitle) => {
+      console.log(
+        "[DEBUG] createMapCard: fetchedTitle =",
+        fetchedTitle,
+        "for",
+        item.video_link,
+      );
+      if (fetchedTitle) {
+        title.innerHTML = formatTitleWithBadges(fetchedTitle);
+        processBadges(title);
+      } else {
+        console.warn(
+          "[DEBUG] createMapCard: No title fetched, keeping 'Loading...'",
+        );
+      }
+    })
+    .catch((err) => {
+      console.error(
+        "[DEBUG] createMapCard: Error fetching title:",
+        err,
+        "for",
+        item.video_link,
+      );
+    });
 
   infoDiv.appendChild(title);
 
