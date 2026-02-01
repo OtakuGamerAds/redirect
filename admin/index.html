@@ -1425,7 +1425,7 @@
 
         // Update channel info count
         const count = mapsList.querySelectorAll(".map-card").length;
-        channelInfo.textContent = `${currentChannel} — ${count} items`;
+        channelInfo.textContent = `${currentChannel} — ${count} عنصر`;
 
         addModal.classList.add("hidden");
       });
@@ -1437,15 +1437,15 @@
         if (!user) {
           showStatus(
             saveStatus,
-            "Not authenticated. Please sign in again.",
+            "لم تتم المصادقة. الرجاء تسجيل الدخول مرة أخرى.",
             "error",
           );
           return;
         }
 
         saveBtn.disabled = true;
-        saveBtn.textContent = "⏳ Saving...";
-        showStatus(saveStatus, "Saving to Firestore...", "loading");
+        saveBtn.textContent = "⏳ جاري الحفظ...";
+        showStatus(saveStatus, "جاري الحفظ في Firestore...", "loading");
 
         try {
           // Get existing Firestore data or create new
@@ -1461,19 +1461,19 @@
           // Save to Firestore
           await setDoc(docRef, fullData);
 
-          showStatus(saveStatus, "Triggering site update...", "loading");
+          showStatus(saveStatus, "جاري تحديث الموقع...", "loading");
 
           // Trigger GitHub Action
           await triggerGitHubAction();
 
-          showStatus(saveStatus, "✅ Saved and published!", "success");
+          showStatus(saveStatus, "✅ تم الحفظ والنشر!", "success");
           hasChanges = false;
           saveBtn.disabled = true;
         } catch (error) {
           console.error("Save error:", error);
-          showStatus(saveStatus, "Error: " + error.message, "error");
+          showStatus(saveStatus, "خطأ: " + error.message, "error");
         } finally {
-          saveBtn.textContent = "💾 Save Changes";
+          saveBtn.textContent = "💾 حفظ التغييرات";
         }
       });
 
@@ -1514,7 +1514,7 @@
       aiProgressCloseBtn.addEventListener("click", () => {
           aiProgress.classList.remove('show');
           generateArticleBtn.disabled = false;
-          generateArticleBtn.innerHTML = generateArticleBtn.dataset.originalText || "✨ Generate with AI"; // Fallback text
+          generateArticleBtn.innerHTML = generateArticleBtn.dataset.originalText || "✨ كتابة بالذكاء الاصطناعي"; // Fallback text
       });
 
       // Generate UUID helper
@@ -1529,14 +1529,14 @@
         const textarea = document.getElementById("add-article-content");
 
         if (!videoUrl) {
-          alert("Please enter a Video Link first.");
+          alert("الرجاء إدخال رابط الفيديو أولاً.");
           return;
         }
 
         if (
           textarea.value &&
           !confirm(
-            "This will overwrite the current content. Do you want to continue?",
+            "سيؤدي هذا إلى استبدال المحتوى الحالي. هل تريد المتابعة؟",
           )
         ) {
           return;
@@ -1551,7 +1551,7 @@
         aiProgress.classList.add('show');
         aiProgressCloseBtn.style.display = 'none'; // Hide close button initially
         realtimeLogs.innerHTML = `<div class="log-entry" style="color: var(--text-color); margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">
-                            <i class="fas fa-satellite-dish"></i> Initializing request...
+                            <i class="fas fa-satellite-dish"></i> جاري بدء الطلب...
                         </div>`;
 
         // Start Timer
@@ -1588,7 +1588,7 @@
                 console.error("Snapshot listener error:", error);
                 const logEntry = document.createElement('div');
                 logEntry.style.color = 'red';
-                logEntry.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Log connection failed: ${error.message}`;
+                logEntry.innerHTML = `<i class="fas fa-exclamation-triangle"></i> فشل الاتصال بالسجل: ${error.message}`;
                 realtimeLogs.appendChild(logEntry);
             });
         } catch (e) {
