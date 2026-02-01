@@ -939,8 +939,6 @@
       // Ensure Firestore connection is ready before attempting to load data
       async function ensureFirestoreReady() {
         try {
-          console.log("Ensuring Firestore connection is ready...");
-          
           // Explicitly enable network (in case it was disabled)
           await enableNetwork(db);
           
@@ -949,8 +947,6 @@
           
           // Add a small buffer to let WebChannel connection establish
           await new Promise((resolve) => setTimeout(resolve, 500));
-          
-          console.log("Firestore connection ready.");
         } catch (error) {
           console.warn("Error during Firestore initialization:", error);
           // Don't throw - let the retry logic in getDocWithRetry handle it
@@ -1056,7 +1052,6 @@
             channelOrder = Object.keys(allChannelsData).sort((a, b) => {
               return (allChannelsData[a].list_number ?? 999) - (allChannelsData[b].list_number ?? 999);
             });
-            console.log("Loaded from Firestore:", channelOrder);
           } else {
             // Fallback: Load from local links.json
             loadingIndicator.textContent = "جاري التحميل من JSON المحلي...";
@@ -1069,7 +1064,6 @@
             channelOrder = Object.keys(allChannelsData).sort((a, b) => {
               return (allChannelsData[a].list_number ?? 999) - (allChannelsData[b].list_number ?? 999);
             });
-            console.log("Loaded from links.json:", channelOrder);
           }
 
           // Render channel buttons
@@ -1092,13 +1086,11 @@
       // ==================== LOAD PAGE VIEWS ====================
       async function loadPageViews() {
         try {
-          console.log("Fetching page view analytics...");
           const getPageViews = httpsCallable(functions, "getPageViews");
           const result = await getPageViews();
           
           if (result.data.success) {
             pageViewsData = result.data.pageViews;
-            console.log(`Loaded analytics for ${Object.keys(pageViewsData).length} paths (cached: ${result.data.cached})`);
             updateAllPageViewBadges();
           }
         } catch (error) {
