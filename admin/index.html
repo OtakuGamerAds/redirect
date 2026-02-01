@@ -693,12 +693,12 @@
           <i class="fas fa-moon theme-icon"></i>
         </button>
         <div class="login-header">
-          <div class="logo">🔐 Admin Panel</div>
-          <p>Authorized access only</p>
+          <div class="logo">🔐 لوحة الإدارة</div>
+          <p>دخول مصرح فقط</p>
         </div>
         <form id="login-form">
           <div class="form-group">
-            <label for="email">Email Address</label>
+            <label for="email">البريد الإلكتروني</label>
             <input
               type="email"
               id="email"
@@ -708,17 +708,17 @@
             />
           </div>
           <div class="form-group">
-            <label for="password">Password</label>
+            <label for="password">كلمة المرور</label>
             <input
               type="password"
               id="password"
               required
-              placeholder="Enter your password"
+              placeholder="أدخل كلمة المرور"
               autocomplete="current-password"
             />
           </div>
           <button type="submit" class="btn btn-full" id="login-btn">
-            Sign In
+            تسجيل الدخول
           </button>
         </form>
         <div id="login-status" class="status-message"></div>
@@ -728,7 +728,7 @@
     <!-- ==================== DASHBOARD VIEW ==================== -->
     <div id="dashboard-view" class="hidden">
       <header class="dashboard-header">
-        <h1>🎮 Content Dashboard</h1>
+        <h1>🎮 لوحة التحكم بالمحتوى</h1>
         <div class="header-actions">
           <button
             onclick="toggleTheme()"
@@ -737,15 +737,15 @@
           >
             <i class="fas fa-moon theme-icon"></i>
           </button>
-          <button id="add-item-btn" class="btn">➕ Add Item</button>
-          <button id="logout-btn" class="btn btn-secondary">Sign Out</button>
+          <button id="add-item-btn" class="btn">➕ إضافة عنصر</button>
+          <button id="logout-btn" class="btn btn-secondary">تسجيل الخروج</button>
         </div>
       </header>
 
       <main class="dashboard-content">
         <!-- Status -->
         <div id="loading-indicator" class="status-message show loading">
-          Loading content...
+          جاري تحميل المحتوى...
         </div>
 
         <!-- Channel Selector Buttons -->
@@ -759,7 +759,7 @@
       </main>
 
       <footer class="save-bar">
-        <button id="save-btn" class="btn" disabled>💾 Save Changes</button>
+        <button id="save-btn" class="btn" disabled>💾 حفظ التغييرات</button>
         <div
           id="save-status"
           class="status-message"
@@ -771,11 +771,11 @@
     <!-- ==================== ADD ITEM MODAL ==================== -->
     <div id="add-modal" class="modal-overlay hidden">
       <div class="modal">
-        <h2>➕ Add New Item</h2>
+        <h2>➕ إضافة عنصر جديد</h2>
         <form id="add-form">
           <!-- Map Name Removed -->
           <div class="form-group">
-            <label for="add-video-link">Video Link</label>
+            <label for="add-video-link">رابط الفيديو</label>
             <input
               type="url"
               id="add-video-link"
@@ -784,7 +784,7 @@
             />
           </div>
           <div class="form-group">
-            <label for="add-map-link">Map Link (Roblox)</label>
+            <label for="add-map-link">رابط الماب (روبلوكس)</label>
             <input
               type="url"
               id="add-map-link"
@@ -794,26 +794,26 @@
           </div>
           <div class="form-group">
             <label for="add-article-content">
-              Article Content (Markdown)
+              محتوى المقال (Markdown)
               <button
                 type="button"
                 id="generate-article-btn"
                 class="btn"
                 style="
-                  margin-left: 10px;
+                  margin-right: 10px;
                   font-size: 0.8em;
                   padding: 4px 12px;
                   background-color: #7b1fa2;
                 "
               >
-                ✨ Generate with AI
+                ✨ كتابة بالذكاء الاصطناعي
               </button>
             </label>
             <div style="position: relative;">
                 <textarea id="add-article-content"></textarea>
                 <!-- Progress Overlay -->
                 <div id="ai-progress" class="ai-progress-overlay">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">Creation in Progress...</h3>
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">جاري الإنشاء...</h3>
                     <div id="realtime-logs" style="
                         width: 100%;
                         max-width: 400px;
@@ -826,19 +826,19 @@
                         font-size: 0.9rem;
                     ">
                         <div class="log-entry" style="color: var(--text-color); margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">
-                            <i class="fas fa-satellite-dish"></i> Connecting to AI...
+                            <i class="fas fa-satellite-dish"></i> جاري الاتصال بالذكاء الاصطناعي...
                         </div>
                     </div>
                     <p id="progress-timer" style="margin-top: 1.5rem; color: var(--text-light); font-size: 0.9rem; font-family: monospace;">00:00</p>
-                    <button id="ai-progress-close-btn" class="btn" style="margin-top: 1rem; display: none;">Close</button>
+                    <button id="ai-progress-close-btn" class="btn" style="margin-top: 1rem; display: none;">إغلاق</button>
                 </div>
             </div>
           </div>
           <div class="modal-actions">
             <button type="button" id="cancel-add-btn" class="btn btn-secondary">
-              Cancel
+              إلغاء
             </button>
-            <button type="submit" class="btn">Add Item</button>
+            <button type="submit" class="btn">إضافة العنصر</button>
           </div>
         </form>
       </div>
@@ -920,8 +920,8 @@
         const password = document.getElementById("password").value;
 
         loginBtn.disabled = true;
-        loginBtn.textContent = "Signing in...";
-        showStatus(loginStatus, "Authenticating...", "loading");
+        loginBtn.textContent = "جاري تسجيل الدخول...";
+        showStatus(loginStatus, "جاري المصادقة...", "loading");
 
         try {
           await signInWithEmailAndPassword(auth, email, password);
@@ -929,7 +929,7 @@
           showStatus(loginStatus, getErrorMessage(error.code), "error");
         } finally {
           loginBtn.disabled = false;
-          loginBtn.textContent = "Sign In";
+          loginBtn.textContent = "تسجيل الدخول";
         }
       });
 
@@ -938,7 +938,7 @@
         if (
           hasChanges &&
           !confirm(
-            "You have unsaved changes. Are you sure you want to sign out?",
+            "لديك تغييرات لم يتم حفظها. هل أنت متأكد أنك تريد تسجيل الخروج؟",
           )
         ) {
           return;
@@ -968,7 +968,7 @@
               loadingIndicator &&
               !loadingIndicator.classList.contains("hidden")
             ) {
-              loadingIndicator.textContent = `Connection unstable. Retrying... (${retries} attempts left)`;
+              loadingIndicator.textContent = `الاتصال غير مستقر. جاري المحاولة مرة أخرى... (${retries} محاولات متبقية)`;
             }
 
             await new Promise((resolve) => setTimeout(resolve, delay));
@@ -981,7 +981,7 @@
       // ==================== LOAD CONTENT ====================
       async function loadContent() {
         loadingIndicator.classList.remove("hidden");
-        loadingIndicator.textContent = "Loading content...";
+        loadingIndicator.textContent = "جاري تحميل المحتوى...";
 
         try {
           // Try Firestore first
@@ -998,7 +998,7 @@
             console.log("Loaded from Firestore:", channelOrder);
           } else {
             // Fallback: Load from local links.json
-            loadingIndicator.textContent = "Loading from local JSON...";
+            loadingIndicator.textContent = "جاري التحميل من JSON المحلي...";
             const response = await fetch(
               "../config/links.json?t=" + new Date().getTime(),
             );
@@ -1023,7 +1023,7 @@
         } catch (error) {
           console.error("Error loading content:", error);
           loadingIndicator.textContent =
-            "Error loading content: " + error.message;
+            "خطأ في تحميل المحتوى: " + error.message;
           loadingIndicator.className = "status-message show error";
         }
       }
