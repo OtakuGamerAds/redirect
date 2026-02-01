@@ -1,0 +1,9 @@
+node_modules/
+client_secret.json
+tokens.json
+*_debug.txt
+*_debug.json
+description_backup.txt
+chrome_debug_profile/
+youtube_session_data/
+.env
