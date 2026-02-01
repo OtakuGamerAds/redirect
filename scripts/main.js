@@ -402,9 +402,8 @@ function resetAndRender() {
   loadedCount = 0;
 
   if (currentChannel && allMapsDataFull[currentChannel]) {
-    // Access the links array from the new structure
-    allMapsData =
-      allMapsDataFull[currentChannel].links || allMapsDataFull[currentChannel];
+    // Access the links array from the structured format
+    allMapsData = allMapsDataFull[currentChannel].links;
     appendMaps(); // Load first batch
   } else {
     grid.innerHTML = "<p>No channels found.</p>";
@@ -735,7 +734,7 @@ async function loadArticlePage(isPagesDir) {
     // Find Item (Search all channels)
     let item = null;
     for (const channel in linksData) {
-      const found = linksData[channel].find(
+      const found = linksData[channel].links.find(
         (i) => getVideoId(i.video_link) === id,
       );
       if (found) {

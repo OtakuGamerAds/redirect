@@ -29,7 +29,7 @@
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="../assets/images/profile_pictures/Rahumi.jpg">
     <link rel="stylesheet" href="../styles/main.css?v=0ec0e3f6">
-    <script src="../scripts/main.js?v=059f972c"></script>
+    <script src="../scripts/main.js?v=bdb315c9"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Redirection Specific Styles */
@@ -275,10 +275,9 @@
                 if (response.ok) {
                     const data = await response.json();
                     // Merge links arrays from all channels (flatten)
-                    // Each channel now has { list_number, links: [...] }
+                    // Each channel has { list_number, links: [...] }
                     allLinks = Object.values(data).reduce((acc, channel) => {
-                        const links = channel.links || channel; // Support new and old format
-                        return acc.concat(links);
+                        return acc.concat(channel.links);
                     }, []);
                 }
 

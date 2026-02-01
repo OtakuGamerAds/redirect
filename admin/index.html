@@ -1263,9 +1263,9 @@
       function renderMapsList() {
         mapsList.innerHTML = "";
 
-        // Access the links array from the new structure
+        // Access the links array from the structured format
         const channelData = allChannelsData[currentChannel];
-        const maps = channelData?.links || channelData || [];
+        const maps = channelData?.links || [];
         channelInfo.textContent = `${currentChannel} — ${maps.length} عنصر`;
 
         if (maps.length === 0) {
