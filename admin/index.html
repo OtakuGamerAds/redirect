@@ -661,9 +661,71 @@
       }
 
       @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(136, 192, 166, 0); }
         100% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0); }
+      }
+
+      /* Video Preview Styles */
+      .video-preview {
+        width: 120px;
+        height: 68px;
+        flex-shrink: 0;
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #000;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .video-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+      }
+
+      .video-preview:hover img {
+        opacity: 0.7;
+      }
+
+      .play-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        background: rgba(0, 0, 0, 0.6);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        pointer-events: none;
+      }
+
+      .video-preview.playing .play-overlay {
+        display: none;
+      }
+
+      .video-preview-placeholder {
+        width: 120px;
+        height: 68px;
+        flex-shrink: 0;
+        background: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        border-radius: 8px;
+        font-size: 0.8rem;
+      }
+
+      [data-theme="dark"] .video-preview-placeholder {
+        background: #333;
+        color: #666;
       }
     </style>
     <script>
@@ -1256,8 +1318,26 @@
         card.className = "map-card";
         card.dataset.index = index;
 
+        // Video Thumbnail Logic
+        const videoId = extractVideoId(map.video_link);
+        const thumbnailUrl = videoId
+          ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+          : "";
+
+        let thumbnailHtml = "";
+        if (videoId) {
+          thumbnailHtml = `
+            <div class="video-preview" data-video-id="${videoId}" title="Click to play">
+                <img src="${thumbnailUrl}" alt="Thumbnail">
+                <div class="play-overlay"><i class="fas fa-play"></i></div>
+            </div>`;
+        } else {
+          thumbnailHtml = `<div class="video-preview-placeholder"><i class="fas fa-video-slash"></i></div>`;
+        }
+
         card.innerHTML = `
                 <div class="drag-handle">☰</div>
+                ${thumbnailHtml}
                 <div class="map-card-content">
                     <h3 class="editable-title" title="انقر للتعديل">جاري تحميل العنوان...</h3>
                     <div class="links">
@@ -1272,19 +1352,26 @@
         // Store full data on the card for retrieval
         card.dataset.mapData = JSON.stringify(map);
 
+        // Video Preview Click Handler
+        if (videoId) {
+          const preview = card.querySelector(".video-preview");
+          preview.addEventListener("click", (e) => {
+            e.stopPropagation(); // prevent card click or other bubbling
+            preview.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+            preview.classList.add("playing");
+          });
+        }
+
         // Set video ID on the page views badge
-        if (map.video_link) {
-          const videoId = extractVideoId(map.video_link);
-          if (videoId) {
-            const badge = card.querySelector(".page-views-badge");
-            badge.dataset.videoId = videoId;
-            // If analytics already loaded, update this badge immediately
-            if (Object.keys(preprocessedViews).length > 0) {
-              const views = preprocessedViews[videoId] || 0;
-              badge.textContent = `👁️ ${formatNumber(views)}`;
-              badge.classList.remove("loading");
-              badge.title = `${views.toLocaleString()} مشاهدة (آخر 30 يوم)`;
-            }
+        if (videoId) {
+          const badge = card.querySelector(".page-views-badge");
+          badge.dataset.videoId = videoId;
+          // If analytics already loaded, update this badge immediately
+          if (Object.keys(preprocessedViews).length > 0) {
+            const views = preprocessedViews[videoId] || 0;
+            badge.textContent = `👁️ ${formatNumber(views)}`;
+            badge.classList.remove("loading");
+            badge.title = `${views.toLocaleString()} مشاهدة (آخر 30 يوم)`;
           }
         }
 
@@ -1301,22 +1388,19 @@
         });
 
         // Check if article exists
-        if (map.video_link) {
-          const videoId = extractVideoId(map.video_link);
-          if (videoId) {
-            // Check if map object already has content (from DOM update)
-            if (!map.article_content) {
-              checkArticleExists(videoId).then((exists) => {
-                if (!exists) {
-                  const linksContainer = card.querySelector(".links");
-                  const badge = document.createElement("span");
-                  badge.className = "missing-article-badge";
-                  badge.textContent = "⚠️ المقال مفقود!";
-                  badge.title = "لم يتم العثور على ملف Markdown لهذا الفيديو.";
-                  linksContainer.appendChild(badge);
-                }
-              });
-            }
+        if (videoId) {
+          // Check if map object already has content (from DOM update)
+          if (!map.article_content) {
+            checkArticleExists(videoId).then((exists) => {
+              if (!exists) {
+                const linksContainer = card.querySelector(".links");
+                const badge = document.createElement("span");
+                badge.className = "missing-article-badge";
+                badge.textContent = "⚠️ المقال مفقود!";
+                badge.title = "لم يتم العثور على ملف Markdown لهذا الفيديو.";
+                linksContainer.appendChild(badge);
+              }
+            });
           }
         }
 
