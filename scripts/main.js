@@ -439,9 +439,12 @@ function generateHeader(isPagesDir) {
   logoWrapper.style.alignItems = "center";
   logoWrapper.style.gap = "1rem";
 
-  const logoDiv = document.createElement("div");
+  const logoDiv = document.createElement("a");
   logoDiv.className = "logo";
   logoDiv.textContent = "رحومي - Rahumi";
+  logoDiv.href = isPagesDir ? "../index.html" : "index.html";
+  logoDiv.style.textDecoration = "none";
+  logoDiv.style.color = "var(--primary-color)"; // Ensure color is maintained
 
   const themeBtn = document.createElement("button");
   themeBtn.id = "theme-toggle";
