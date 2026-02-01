@@ -170,6 +170,7 @@ async function loadConfig() {
     populateContent(data, isPagesDir);
     generateNav(data.nav, isPagesDir);
     generateHomeNav(data.nav);
+    generateFooter(isPagesDir);
 
     // Check for Videos Page (matches both /videos/ and videos.html for backward compat)
     if (
@@ -386,11 +387,37 @@ function generateHomeNav(navItems) {
     a.style.display = "block";
     a.style.textAlign = "center";
 
-    // Add text and emoji
-    a.innerHTML = `${videosItem.text} <span style="margin-right: 0.5rem;">🎮</span>`;
+    // Add text and icon
+    a.innerHTML = `${videosItem.text} <i class="fas fa-gamepad" style="margin-right: 0.5rem;"></i>`;
 
     container.appendChild(a);
   }
+}
+
+function generateFooter(isPagesDir) {
+  // Check if footer already exists to avoid duplicates
+  if (document.querySelector("footer.site-footer")) return;
+
+  const footer = document.createElement("footer");
+  footer.className = "site-footer";
+
+  const prefix = isPagesDir ? "../" : "";
+  const date = new Date().getFullYear();
+
+  footer.innerHTML = `
+    <div style="margin-bottom: 0.5rem;">
+      <a href="${prefix}privacy/">سياسة الخصوصية</a>
+      <span style="opacity: 0.3; margin: 0 5px;">|</span>
+      <a href="${prefix}terms/">شروط الاستخدام</a>
+      <span style="opacity: 0.3; margin: 0 5px;">|</span>
+      <a href="${prefix}contact/">اتصل بنا</a>
+    </div>
+    <div style="font-size: 0.85em; opacity: 0.8;">
+      &copy; ${date} رحومي - جميع الحقوق محفوظة
+    </div>
+  `;
+
+  document.body.appendChild(footer);
 }
 
 // Variables for infinite scroll
