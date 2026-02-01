@@ -1112,39 +1112,22 @@
       }
 
       function updateAllPageViewBadges() {
-        console.log("Analytics Update: Processing badges...");
-        console.log("Data:", pageViewsData);
-        
-        let updateCount = 0;
         document.querySelectorAll(".page-views-badge").forEach(badge => {
           const videoId = badge.dataset.videoId;
           if (videoId) {
             let totalViews = 0;
-            let matchCount = 0;
             
             for (const [p, v] of Object.entries(pageViewsData)) {
               if (p.toLowerCase().includes(videoId.toLowerCase())) {
                 totalViews += v;
-                matchCount++;
               }
             }
             
             badge.textContent = `👁️ ${formatNumber(totalViews)}`;
             badge.classList.remove("loading");
             badge.title = `${totalViews.toLocaleString()} مشاهدة (آخر 30 يوم)`;
-            updateCount++;
-            
-            if (totalViews > 0) {
-              console.log(`Matched ID ${videoId}: ${totalViews} views in ${matchCount} paths`);
-            } else {
-              // Only log occasional misses or first few to avoid spam
-              if (updateCount < 10) {
-                console.log(`No matches for ID ${videoId} among ${Object.keys(pageViewsData).length} paths`);
-              }
-            }
           }
         });
-        console.log(`Updated ${updateCount} page view badges.`);
       }
 
       function formatNumber(num) {
@@ -1289,11 +1272,10 @@
             badge.dataset.videoId = videoId;
             // If analytics already loaded, update this badge immediately
             if (Object.keys(pageViewsData).length > 0) {
-              const path = `/redirect/?v=${videoId}`;
-              let views = pageViewsData[path] || 0;
+              let views = 0;
               for (const [p, v] of Object.entries(pageViewsData)) {
-                if (p.includes(videoId)) {
-                  views = Math.max(views, v);
+                if (p.toLowerCase().includes(videoId.toLowerCase())) {
+                  views += v;
                 }
               }
               badge.textContent = `👁️ ${formatNumber(views)}`;
