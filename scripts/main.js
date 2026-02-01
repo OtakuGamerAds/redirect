@@ -450,151 +450,24 @@ function appendMaps() {
   }
 }
 
-const videoTitleCache = {};
-const channelDataCache = {};
-const channelFetchPromises = {};
-
 async function fetchVideoTitle(videoUrl) {
-  if (!videoUrl) return null;
-  if (videoTitleCache[videoUrl]) return videoTitleCache[videoUrl];
-
-  try {
-    const response = await fetch(
-      `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`,
-    );
-    if (!response.ok) throw new Error("Network response was not ok");
-    const data = await response.json();
-    if (data.title) {
-      videoTitleCache[videoUrl] = data.title;
-      return data.title;
-    }
-  } catch (error) {
-    console.warn("Failed to fetch video title for:", videoUrl, error);
-  }
-  return null;
+  return TitleUtils.fetchVideoTitle(videoUrl);
 }
 
-// Fetch channel info using microlink.io
 async function fetchChannelInfo(handle) {
-  if (channelDataCache[handle]) return channelDataCache[handle];
-  if (channelFetchPromises[handle]) return channelFetchPromises[handle];
-
-  const fetchPromise = (async () => {
-    const channelUrl = `https://www.youtube.com/@${handle}`;
-    try {
-      const response = await fetch(
-        `https://api.microlink.io/?url=${encodeURIComponent(channelUrl)}`,
-      );
-      if (!response.ok) throw new Error("Microlink fetch failed");
-
-      const json = await response.json();
-      if (json.status === "success" && json.data) {
-        const info = {
-          name: json.data.author || json.data.title || handle,
-          url: json.data.url || channelUrl,
-          image: json.data.image ? json.data.image.url : null,
-          logo: json.data.logo ? json.data.logo.url : null,
-        };
-        // Prefer logo/image
-        info.avatar =
-          info.image || info.logo || `https://unavatar.io/youtube/@${handle}`;
-
-        channelDataCache[handle] = info;
-        return info;
-      }
-    } catch (error) {
-      console.warn("Error fetching channel info for", handle, error);
-    }
-
-    // Fallback if failed
-    const fallbackInfo = {
-      name: handle,
-      url: channelUrl,
-      avatar: `https://unavatar.io/youtube/@${handle}`,
-    };
-    channelDataCache[handle] = fallbackInfo;
-    return fallbackInfo;
-  })();
-
-  channelFetchPromises[handle] = fetchPromise;
-
-  // Clear promise from cache when done (optional, but data cache handles future requests)
-  // We keep it simple: channelDataCache takes precedence, so next call returns data immediately.
-
-  return fetchPromise;
+  return TitleUtils.fetchChannelInfo(handle);
 }
 
 function formatTitleWithBadges(title) {
-  if (!title) return "";
-
-  // Clean up title (remove specific phrases)
-  // Phrases: "روبولكس : ", " في لعبة روبلوكس", " في روبلوكس", "روبلوكس: ", "روبلوكس ولكن ", "روبلوكس : ولكن ", "روبلوكس "
-  let cleaned = title
-    .replace(/روبولكس : /g, "") // Handle typo version just in case
-    .replace(/روبلوكس : ولكن /g, "")
-    .replace(/روبلوكس : /g, "") // Correct spelling with space before colon
-    .replace(/روبلوكس: /g, "")
-    .replace(/روبلوكس ولكن /g, "")
-    .replace(/روبلوكس /g, "")
-    .replace(/ في لعبة روبلوكس/g, "")
-    .replace(/ في روبلوكس/g, "");
-
-  // Clean potential leftover starting punctuation like ": " or " :"
-  cleaned = cleaned
-    .trim()
-    .replace(/^[:\s-]+/g, "")
-    .trim();
-
-  // Regex to find @Handle (alphanumeric, underscore, dot, hyphen)
-  // Matches @FollowedByChars until a space or end of string or non-handle char
-  const regex = /@([a-zA-Z0-9_.-]+)/g;
-
-  return cleaned.replace(regex, (match, handle) => {
-    // Return a placeholder badge that we will hydrate asynchronously
-    // We use a specific class and data attribute to find it later
-    return `<a href="https://www.youtube.com/@${handle}" target="_blank" class="youtuber-badge pending-badge" data-handle="${handle}" onclick="event.stopPropagation();">
-            <i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>
-            <span>${handle}</span>
-        </a>`;
-  });
+  return TitleUtils.formatTitleWithBadges(title);
 }
 
 async function processBadges(container) {
-  const badges = container.querySelectorAll(".youtuber-badge.pending-badge");
-
-  for (const badge of badges) {
-    const handle = badge.dataset.handle;
-
-    // Remove pending class to avoid double processing if called multiple times
-    badge.classList.remove("pending-badge");
-
-    // Check manual overrides first
-    if (window.siteCollaborators && window.siteCollaborators[`@${handle}`]) {
-      const data = window.siteCollaborators[`@${handle}`];
-      updateBadgeUI(badge, data.name, data.avatar, data.url);
-      continue;
-    }
-
-    // Fetch dynamic data
-    fetchChannelInfo(handle).then((info) => {
-      updateBadgeUI(badge, info.name, info.avatar, info.url);
-    });
-  }
+  return TitleUtils.processBadges(container);
 }
 
 function updateBadgeUI(badge, name, avatar, url) {
-  badge.href = url;
-
-  let content = "";
-  if (avatar) {
-    content += `<img src="${avatar}" alt="${name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />`;
-    content += `<i class="fab fa-youtube fallback-icon" style="display:none; margin-left:5px; color: #ff0000;"></i>`;
-  } else {
-    content += `<i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>`;
-  }
-  content += `<span>${name}</span>`;
-
-  badge.innerHTML = content;
+  return TitleUtils.updateBadgeUI(badge, name, avatar, url);
 }
 
 function createMapCard(item) {
@@ -773,29 +646,15 @@ function updateChannelButtons() {
 }
 
 function getYouTubeThumbnail(url) {
-  if (!url) return "";
-  // Handle youtube.com and youtu.be
-  let videoId = "";
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
-  if (match) {
-    videoId = match[1];
-    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  }
-  return "";
+  return TitleUtils.getYouTubeThumbnail(url);
 }
-// Helper to get raw video ID
+
 function getVideoId(url) {
-  if (!url) return null;
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
-  return match ? match[1] : null;
+  return TitleUtils.getVideoId(url);
 }
 
 function getRobloxPlaceId(url) {
-  if (!url) return null;
-  // Standard URL: https://www.roblox.com/games/920587237/Adopt-Me
-  // Also handles: https://www.roblox.com/games/920587237 (no trailing slash or name)
-  const match = url.match(/roblox\.com\/games\/(\d+)/);
-  return match ? match[1] : null;
+  return TitleUtils.getRobloxPlaceId(url);
 }
 
 // Function to get game name
