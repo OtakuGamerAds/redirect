@@ -55,18 +55,21 @@ const TitleUtils = (function () {
   function formatTitleWithBadges(title) {
     if (!title) return "";
 
-    // Clean up phrases
+    // Clean up phrases - order matters!
     let cleaned = title
       .replace(/روبولكس : /g, "")
       .replace(/روبلوكس : ولكن /g, "")
       .replace(/روبلوكس : /g, "")
       .replace(/روبلوكس: /g, "")
       .replace(/روبلوكس ولكن /g, "")
-      .replace(/روبلوكس /g, "")
       .replace(/ في لعبة روبلوكس/g, "")
-      .replace(/ في روبلوكس/g, "");
+      .replace(/ في روبلوكس/g, "")
+      .replace(/روبلوكس /g, "");
 
+    // Clean up orphaned "في" that may be left behind after removing "روبلوكس"
+    // This handles cases like "في أصعب ماب في روبلوكس" -> "في أصعب ماب في"
     cleaned = cleaned
+      .replace(/ في\s*([!,.،؛:؟\s]|$)/g, " $1") // Remove trailing "في" before punctuation or end
       .trim()
       .replace(/^[:\s-]+/g, "")
       .trim();
