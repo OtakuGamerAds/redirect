@@ -549,6 +549,36 @@
         color: #ddd;
       }
 
+      /* ==================== PAGE VIEWS BADGE ==================== */
+      .page-views-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        color: #2e7d32;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+        margin-right: auto;
+      }
+
+      .page-views-badge.loading {
+        background: #f5f5f5;
+        color: #999;
+      }
+
+      [data-theme="dark"] .page-views-badge {
+        background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+        color: #95d5b2;
+      }
+
+      [data-theme="dark"] .page-views-badge.loading {
+        background: #333;
+        color: #666;
+      }
+
       /* ==================== AI GENERATION PROGRESS ==================== */
       .ai-progress-overlay {
         position: absolute;
@@ -884,6 +914,7 @@
       let hasChanges = false;
       let sortableInstance = null;
       let editingItemCard = null; // Track which card is being edited (null = adding new)
+      let pageViewsData = {}; // Cached analytics: { "/redirect/?v=videoId": 1234, ... }
 
       // ==================== DOM ELEMENTS ====================
       const loginView = document.getElementById("login-view");
@@ -935,6 +966,8 @@
           // Wait for Firestore to be ready before loading
           await ensureFirestoreReady();
           await loadContent();
+          // Load analytics in background (non-blocking)
+          loadPageViews();
         } else {
           loginView.classList.remove("hidden");
           dashboardView.classList.add("hidden");
@@ -1056,6 +1089,60 @@
         }
       }
 
+      // ==================== LOAD PAGE VIEWS ====================
+      async function loadPageViews() {
+        try {
+          console.log("Fetching page view analytics...");
+          const getPageViews = httpsCallable(functions, "getPageViews");
+          const result = await getPageViews();
+          
+          if (result.data.success) {
+            pageViewsData = result.data.pageViews;
+            console.log(`Loaded analytics for ${Object.keys(pageViewsData).length} paths (cached: ${result.data.cached})`);
+            updateAllPageViewBadges();
+          }
+        } catch (error) {
+          console.warn("Could not load page views:", error.message);
+          // Silently fail - analytics is optional
+          document.querySelectorAll(".page-views-badge").forEach(badge => {
+            badge.textContent = "👁️ —";
+            badge.classList.remove("loading");
+          });
+        }
+      }
+
+      function updateAllPageViewBadges() {
+        document.querySelectorAll(".page-views-badge").forEach(badge => {
+          const videoId = badge.dataset.videoId;
+          if (videoId) {
+            // Try to find matching path (redirect page is /redirect/?v=videoId)
+            const path = `/redirect/?v=${videoId}`;
+            const views = pageViewsData[path] || 0;
+            
+            // Also check for paths without query or with trailing slashes
+            let totalViews = views;
+            for (const [p, v] of Object.entries(pageViewsData)) {
+              if (p.includes(videoId)) {
+                totalViews = Math.max(totalViews, v);
+              }
+            }
+            
+            badge.textContent = `👁️ ${formatNumber(totalViews)}`;
+            badge.classList.remove("loading");
+            badge.title = `${totalViews.toLocaleString()} مشاهدة (آخر 30 يوم)`;
+          }
+        });
+      }
+
+      function formatNumber(num) {
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + "M";
+        } else if (num >= 1000) {
+          return (num / 1000).toFixed(1) + "K";
+        }
+        return num.toString();
+      }
+
       // ==================== RENDER CHANNEL BUTTONS ====================
       function renderChannelButtons() {
         channelButtonsContainer.innerHTML = "";
@@ -1174,11 +1261,34 @@
                         <a href="${escapeHtml(map.map_link)}" target="_blank">🎮 Roblox</a>
                     </div>
                 </div>
+                <span class="page-views-badge loading" data-video-id="">👁️ ...</span>
                 <button class="delete-btn" title="Delete">✕</button>
             `;
 
         // Store full data on the card for retrieval
         card.dataset.mapData = JSON.stringify(map);
+
+        // Set video ID on the page views badge
+        if (map.video_link) {
+          const videoId = extractVideoId(map.video_link);
+          if (videoId) {
+            const badge = card.querySelector(".page-views-badge");
+            badge.dataset.videoId = videoId;
+            // If analytics already loaded, update this badge immediately
+            if (Object.keys(pageViewsData).length > 0) {
+              const path = `/redirect/?v=${videoId}`;
+              let views = pageViewsData[path] || 0;
+              for (const [p, v] of Object.entries(pageViewsData)) {
+                if (p.includes(videoId)) {
+                  views = Math.max(views, v);
+                }
+              }
+              badge.textContent = `👁️ ${formatNumber(views)}`;
+              badge.classList.remove("loading");
+              badge.title = `${views.toLocaleString()} مشاهدة (آخر 30 يوم)`;
+            }
+          }
+        }
 
         // Fetch Title
         fetchVideoTitle(map.video_link).then((title) => {
