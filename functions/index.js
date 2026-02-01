@@ -250,3 +250,96 @@ exports.generateArticle = onCall(
     }
   },
 );
+
+/**
+ * Cloud Function: getPageViews
+ *
+ * Fetches page view counts from Google Analytics 4 Data API.
+ * Returns a map of page paths to view counts for the last 30 days.
+ * Results are cached in Firestore for 1 hour to reduce API calls.
+ *
+ * REQUIRES:
+ * - Google Analytics Data API enabled in Google Cloud Console
+ * - Firebase service account added as Viewer to GA4 property
+ */
+exports.getPageViews = onCall(
+  {
+    cors: true,
+    serviceAccount:
+      "firebase-adminsdk-fbsvc@rahumi-redirect.iam.gserviceaccount.com",
+  },
+  async (request) => {
+    // 1. Verify authentication
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated",
+        "You must be logged in to view analytics.",
+      );
+    }
+
+    // GA4 Property ID - Your Measurement ID is G-SPEWBEZZSN
+    // In GA4: Admin > Property Settings > Property ID (numeric)
+    const GA4_PROPERTY_ID = "521358700";
+    const CACHE_DOC_ID = "page_views_cache_v2"; // Increment version to force fresh fetch
+    const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+    try {
+      // Check cache first
+      const cacheRef = admin
+        .firestore()
+        .collection("analytics_cache")
+        .doc(CACHE_DOC_ID);
+      const cacheDoc = await cacheRef.get();
+
+      if (cacheDoc.exists) {
+        const cacheData = cacheDoc.data();
+        const cacheAge = Date.now() - cacheData.timestamp.toMillis();
+
+        if (cacheAge < CACHE_DURATION_MS) {
+          return {
+            success: true,
+            pageViews: cacheData.pageViews,
+            cached: true,
+          };
+        }
+      }
+
+      // Cache expired or doesn't exist, fetch from GA4
+      const { BetaAnalyticsDataClient } = require("@google-analytics/data");
+      const analyticsDataClient = new BetaAnalyticsDataClient();
+
+      const [response] = await analyticsDataClient.runReport({
+        property: `properties/${GA4_PROPERTY_ID}`,
+        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+        dimensions: [{ name: "pagePathPlusQueryString" }],
+        metrics: [{ name: "screenPageViews" }],
+        orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+        limit: 500,
+      });
+
+      // Build page views map
+      const pageViews = {};
+      if (response.rows) {
+        for (const row of response.rows) {
+          const path = row.dimensionValues[0].value;
+          const views = parseInt(row.metricValues[0].value, 10);
+          pageViews[path] = views;
+        }
+      }
+
+      // Cache the results
+      await cacheRef.set({
+        pageViews: pageViews,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { success: true, pageViews: pageViews, cached: false };
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      throw new HttpsError(
+        "internal",
+        "Failed to fetch analytics: " + error.message,
+      );
+    }
+  },
+);

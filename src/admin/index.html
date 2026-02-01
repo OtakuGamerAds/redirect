@@ -549,6 +549,36 @@
         color: #ddd;
       }
 
+      /* ==================== PAGE VIEWS BADGE ==================== */
+      .page-views-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        color: #2e7d32;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+        margin-right: auto;
+      }
+
+      .page-views-badge.loading {
+        background: #f5f5f5;
+        color: #999;
+      }
+
+      [data-theme="dark"] .page-views-badge {
+        background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+        color: #95d5b2;
+      }
+
+      [data-theme="dark"] .page-views-badge.loading {
+        background: #333;
+        color: #666;
+      }
+
       /* ==================== AI GENERATION PROGRESS ==================== */
       .ai-progress-overlay {
         position: absolute;
@@ -631,9 +661,52 @@
       }
 
       @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(136, 192, 166, 0); }
         100% { box-shadow: 0 0 0 0 rgba(136, 192, 166, 0); }
+      }
+
+      /* Video Preview Styles */
+      .video-preview {
+        width: 120px;
+        height: 68px;
+        flex-shrink: 0;
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #000;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .video-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+      }
+
+      .video-preview:hover img {
+        opacity: 0.7;
+      }
+
+
+
+      .video-preview-placeholder {
+        width: 120px;
+        height: 68px;
+        flex-shrink: 0;
+        background: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        border-radius: 8px;
+        font-size: 0.8rem;
+      }
+
+      [data-theme="dark"] .video-preview-placeholder {
+        background: #333;
+        color: #666;
       }
     </style>
     <script>
@@ -844,6 +917,7 @@
       </div>
     </div>
 
+    <script src="../scripts/title-utils.js"></script>
     <!-- Firebase SDK -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -859,6 +933,8 @@
         getDoc,
         setDoc,
         onSnapshot,
+        enableNetwork,
+        waitForPendingWrites,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
       import {
         getFunctions,
@@ -881,6 +957,8 @@
       let hasChanges = false;
       let sortableInstance = null;
       let editingItemCard = null; // Track which card is being edited (null = adding new)
+      let pageViewsData = {}; // Raw analytics: { "/path": 1234 }
+      let preprocessedViews = {}; // Final mapping: { "videoId": 5678 }
 
       // ==================== DOM ELEMENTS ====================
       const loginView = document.getElementById("login-view");
@@ -901,12 +979,35 @@
       const saveBtn = document.getElementById("save-btn");
       const saveStatus = document.getElementById("save-status");
 
+      // ==================== FIRESTORE INITIALIZATION ====================
+      // Ensure Firestore connection is ready before attempting to load data
+      async function ensureFirestoreReady() {
+        try {
+          // Explicitly enable network (in case it was disabled)
+          await enableNetwork(db);
+          
+          // Wait for any pending writes to complete
+          await waitForPendingWrites(db);
+          
+          // Add a small buffer to let WebChannel connection establish
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (error) {
+          console.warn("Error during Firestore initialization:", error);
+          // Don't throw - let the retry logic in getDocWithRetry handle it
+        }
+      }
+
       // ==================== AUTH STATE ====================
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           loginView.classList.add("hidden");
           dashboardView.classList.remove("hidden");
+          
+          // Wait for Firestore to be ready before loading
+          await ensureFirestoreReady();
           await loadContent();
+          // Load analytics in background (non-blocking)
+          loadPageViews();
         } else {
           loginView.classList.remove("hidden");
           dashboardView.classList.add("hidden");
@@ -947,7 +1048,7 @@
       });
 
       // ==================== HELPER: RETRY LOGIC ====================
-      async function getDocWithRetry(docRef, retries = 3, delay = 1000) {
+      async function getDocWithRetry(docRef, retries = 3, delay = 2000) {
         try {
           return await getDoc(docRef);
         } catch (error) {
@@ -955,12 +1056,12 @@
           const isOffline =
             error.message.includes("offline") ||
             error.code === "unavailable" ||
-            error.message.includes("network");
+            error.message.includes("network") ||
+            error.message.includes("failed-precondition");
 
           if (retries > 0 && isOffline) {
             console.warn(
-              `Firestore getDoc failed. Retrying in ${delay}ms...`,
-              error,
+              `Firestore getDoc failed (${error.code || error.message}). Retrying in ${delay}ms... (${retries} attempts remaining)`,
             );
 
             // Optional: Update loading text
@@ -968,11 +1069,11 @@
               loadingIndicator &&
               !loadingIndicator.classList.contains("hidden")
             ) {
-              loadingIndicator.textContent = `الاتصال غير مستقر. جاري المحاولة مرة أخرى... (${retries} محاولات متبقية)`;
+              loadingIndicator.textContent = `Connection issue detected. Retrying... (${retries} attempts left)`;
             }
 
             await new Promise((resolve) => setTimeout(resolve, delay));
-            return getDocWithRetry(docRef, retries - 1, delay * 1.5); // Backoff
+            return getDocWithRetry(docRef, retries - 1, delay * 1.5); // Exponential backoff
           }
           throw error;
         }
@@ -995,20 +1096,18 @@
             channelOrder = Object.keys(allChannelsData).sort((a, b) => {
               return (allChannelsData[a].list_number ?? 999) - (allChannelsData[b].list_number ?? 999);
             });
-            console.log("Loaded from Firestore:", channelOrder);
           } else {
             // Fallback: Load from local links.json
             loadingIndicator.textContent = "جاري التحميل من JSON المحلي...";
             const response = await fetch(
               "../config/links.json?t=" + new Date().getTime(),
             );
-            if (!response.ok) throw new Error("Failed to load links.json");
+            if (!response.ok) throw new Error("فشل في تحميل links.json");
             allChannelsData = await response.json();
             // Sort channels by list_number
             channelOrder = Object.keys(allChannelsData).sort((a, b) => {
               return (allChannelsData[a].list_number ?? 999) - (allChannelsData[b].list_number ?? 999);
             });
-            console.log("Loaded from links.json:", channelOrder);
           }
 
           // Render channel buttons
@@ -1026,6 +1125,69 @@
             "خطأ في تحميل المحتوى: " + error.message;
           loadingIndicator.className = "status-message show error";
         }
+      }
+
+      // ==================== LOAD PAGE VIEWS ====================
+      async function loadPageViews() {
+        try {
+          const getPageViews = httpsCallable(functions, "getPageViews");
+          const result = await getPageViews();
+          
+          if (result.data.success) {
+            pageViewsData = result.data.pageViews;
+            
+            // Pre-process raw paths into videoId->totalViews map (O(M))
+            preprocessedViews = {};
+            for (const [path, views] of Object.entries(pageViewsData)) {
+              const urlParams = new URLSearchParams(path.split('?')[1] || '');
+              const videoId = urlParams.get('v') || urlParams.get('id');
+              
+              if (videoId) {
+                preprocessedViews[videoId] = (preprocessedViews[videoId] || 0) + views;
+              } else {
+                // Fallback for weird paths or different param names
+                const match = path.match(/[?&](?:v|id)=([^&]+)/i);
+                if (match) {
+                  const vId = match[1];
+                  preprocessedViews[vId] = (preprocessedViews[vId] || 0) + views;
+                }
+              }
+            }
+            
+            updateAllPageViewBadges();
+          }
+        } catch (error) {
+          console.warn("Could not load page views:", error.message);
+          // Silently fail - analytics is optional
+          document.querySelectorAll(".page-views-badge").forEach(badge => {
+            badge.textContent = "👁️ —";
+            badge.classList.remove("loading");
+          });
+        }
+      }
+
+      function updateAllPageViewBadges() {
+        requestAnimationFrame(() => {
+          document.querySelectorAll(".page-views-badge").forEach(badge => {
+            const videoId = badge.dataset.videoId;
+            if (videoId) {
+              const totalViews = preprocessedViews[videoId] || 0;
+              
+              badge.textContent = `👁️ ${formatNumber(totalViews)}`;
+              badge.classList.remove("loading");
+              badge.title = `${totalViews.toLocaleString()} مشاهدة (آخر 30 يوم)`;
+            }
+          });
+        });
+      }
+
+      function formatNumber(num) {
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + "M";
+        } else if (num >= 1000) {
+          return (num / 1000).toFixed(1) + "K";
+        }
+        return num.toString();
       }
 
       // ==================== RENDER CHANNEL BUTTONS ====================
@@ -1071,14 +1233,7 @@
       }
 
       function normalizeYoutubeLink(url) {
-        if (!url) return "";
-        const match = url.match(
-          /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/,
-        );
-        if (match && match[2].length === 11) {
-          return `https://youtu.be/${match[2]}`;
-        }
-        return url;
+        return TitleUtils.normalizeYoutubeLink(url);
       }
 
       // ==================== SWITCH CHANNEL ====================
@@ -1088,125 +1243,20 @@
         renderMapsList();
       }
 
-      // ==================== TITLE FORMATTING HELPERS ====================
-      const channelDataCache = {};
-      const channelFetchPromises = {};
-
-      async function fetchChannelInfo(handle) {
-        if (channelDataCache[handle]) return channelDataCache[handle];
-        if (channelFetchPromises[handle]) return channelFetchPromises[handle];
-
-        const fetchPromise = (async () => {
-          const channelUrl = `https://www.youtube.com/@${handle}`;
-          try {
-            const response = await fetch(
-              `https://api.microlink.io/?url=${encodeURIComponent(channelUrl)}`,
-            );
-            if (!response.ok) throw new Error("Microlink fetch failed");
-
-            const json = await response.json();
-            if (json.status === "success" && json.data) {
-              const info = {
-                name: json.data.author || json.data.title || handle,
-                url: json.data.url || channelUrl,
-                image: json.data.image ? json.data.image.url : null,
-                logo: json.data.logo ? json.data.logo.url : null,
-              };
-              info.avatar =
-                info.image ||
-                info.logo ||
-                `https://unavatar.io/youtube/@${handle}`;
-              channelDataCache[handle] = info;
-              return info;
-            }
-          } catch (error) {
-            console.warn("Error fetching channel info for", handle, error);
-          }
-
-          const fallbackInfo = {
-            name: handle,
-            url: channelUrl,
-            avatar: `https://unavatar.io/youtube/@${handle}`,
-          };
-          channelDataCache[handle] = fallbackInfo;
-          return fallbackInfo;
-        })();
-
-        channelFetchPromises[handle] = fetchPromise;
-        return fetchPromise;
-      }
-
       function formatTitleWithBadges(title) {
-        if (!title) return "";
-
-        // Clean up phrases
-        let cleaned = title
-          .replace(/روبولكس : /g, "")
-          .replace(/روبلوكس : ولكن /g, "")
-          .replace(/روبلوكس : /g, "")
-          .replace(/روبلوكس: /g, "")
-          .replace(/روبلوكس ولكن /g, "")
-          .replace(/روبلوكس /g, "")
-          .replace(/ في لعبة روبلوكس/g, "")
-          .replace(/ في روبلوكس/g, "");
-
-        cleaned = cleaned
-          .trim()
-          .replace(/^[:\s-]+/g, "")
-          .trim();
-
-        // Regex to find @Handle
-        const regex = /@([a-zA-Z0-9_.-]+)/g;
-
-        return cleaned.replace(regex, (match, handle) => {
-          return `<a href="https://www.youtube.com/@${handle}" target="_blank" class="youtuber-badge pending-badge" data-handle="${handle}" onclick="event.stopPropagation();">
-                    <i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>
-                    <span>${handle}</span>
-                </a>`;
-        });
+        return TitleUtils.formatTitleWithBadges(title);
       }
 
       async function processBadges(container) {
-        const badges = container.querySelectorAll(
-          ".youtuber-badge.pending-badge",
-        );
-
-        for (const badge of badges) {
-          const handle = badge.dataset.handle;
-          badge.classList.remove("pending-badge");
-
-          // Fetch dynamic data
-          fetchChannelInfo(handle).then((info) => {
-            updateBadgeUI(badge, info.name, info.avatar, info.url);
-          });
-        }
+        return TitleUtils.processBadges(container);
       }
 
       function updateBadgeUI(badge, name, avatar, url) {
-        badge.href = url;
-        let content = "";
-        if (avatar) {
-          content += `<img src="${avatar}" alt="${name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />`;
-          content += `<i class="fab fa-youtube fallback-icon" style="display:none; margin-left:5px; color: #ff0000;"></i>`;
-        } else {
-          content += `<i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>`;
-        }
-        content += `<span>${name}</span>`;
-        badge.innerHTML = content;
+        return TitleUtils.updateBadgeUI(badge, name, avatar, url);
       }
 
-      // ==================== HELPER: FETCH TITLE ====================
       async function fetchVideoTitle(videoUrl) {
-        if (!videoUrl) return null;
-        try {
-          const response = await fetch(
-            `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`,
-          );
-          const data = await response.json();
-          return data.title;
-        } catch {
-          return null;
-        }
+        return TitleUtils.fetchVideoTitle(videoUrl);
       }
 
       // ==================== RENDER MAPS LIST ====================
@@ -1216,11 +1266,11 @@
         // Access the links array from the new structure
         const channelData = allChannelsData[currentChannel];
         const maps = channelData?.links || channelData || [];
-        channelInfo.textContent = `${currentChannel} — ${maps.length} items`;
+        channelInfo.textContent = `${currentChannel} — ${maps.length} عنصر`;
 
         if (maps.length === 0) {
           mapsList.innerHTML =
-            '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No items in this channel. Click "Add Item" to create one.</p>';
+            '<p style="text-align: center; color: var(--text-light); padding: 2rem;">لا توجد عناصر في هذه القناة. انقر على "إضافة عنصر" لإنشاء واحد.</p>';
           return;
         }
 
@@ -1249,25 +1299,65 @@
         card.className = "map-card";
         card.dataset.index = index;
 
+        // Video Thumbnail Logic
+        const videoId = extractVideoId(map.video_link);
+        const thumbnailUrl = videoId
+          ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+          : "";
+
+        let thumbnailHtml = "";
+        if (videoId) {
+          thumbnailHtml = `
+            <div class="video-preview" data-video-id="${videoId}" title="Click to play">
+                <img src="${thumbnailUrl}" alt="Thumbnail">
+            </div>`;
+        } else {
+          thumbnailHtml = `<div class="video-preview-placeholder"><i class="fas fa-video-slash"></i></div>`;
+        }
+
         card.innerHTML = `
                 <div class="drag-handle">☰</div>
+                ${thumbnailHtml}
                 <div class="map-card-content">
-                    <h3 class="editable-title" title="Click to edit">Loading title...</h3>
+                    <h3 class="editable-title" title="انقر للتعديل">جاري تحميل العنوان...</h3>
                     <div class="links">
-                        <a href="${escapeHtml(map.video_link)}" target="_blank">📹 Video</a>
-                        <a href="${escapeHtml(map.map_link)}" target="_blank">🎮 Roblox</a>
+                        <a href="${escapeHtml(map.map_link)}" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: 6px;">🎮 Roblox</a>
+                        <a href="../article/?id=${videoId}" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: 6px;">📄 Article</a>
                     </div>
                 </div>
-                <button class="delete-btn" title="Delete">✕</button>
+                <span class="page-views-badge loading" data-video-id="">👁️ ...</span>
+                <button class="delete-btn" title="حذف">✕</button>
             `;
 
         // Store full data on the card for retrieval
         card.dataset.mapData = JSON.stringify(map);
 
+        // Video Preview Click Handler
+        if (videoId) {
+          const preview = card.querySelector(".video-preview");
+          preview.addEventListener("click", (e) => {
+            e.stopPropagation(); // prevent card click or other bubbling
+            window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+          });
+        }
+
+        // Set video ID on the page views badge
+        if (videoId) {
+          const badge = card.querySelector(".page-views-badge");
+          badge.dataset.videoId = videoId;
+          // If analytics already loaded, update this badge immediately
+          if (Object.keys(preprocessedViews).length > 0) {
+            const views = preprocessedViews[videoId] || 0;
+            badge.textContent = `👁️ ${formatNumber(views)}`;
+            badge.classList.remove("loading");
+            badge.title = `${views.toLocaleString()} مشاهدة (آخر 30 يوم)`;
+          }
+        }
+
         // Fetch Title
         fetchVideoTitle(map.video_link).then((title) => {
           const titleEl = card.querySelector("h3");
-          const displayTitle = title || "Loading...";
+          const displayTitle = title || "جاري التحميل...";
 
           // Apply RTL if Arabic found
           setElementDirection(titleEl, displayTitle);
@@ -1277,22 +1367,19 @@
         });
 
         // Check if article exists
-        if (map.video_link) {
-          const videoId = extractVideoId(map.video_link);
-          if (videoId) {
-            // Check if map object already has content (from DOM update)
-            if (!map.article_content) {
-              checkArticleExists(videoId).then((exists) => {
-                if (!exists) {
-                  const linksContainer = card.querySelector(".links");
-                  const badge = document.createElement("span");
-                  badge.className = "missing-article-badge";
-                  badge.textContent = "⚠️ Article Missing!";
-                  badge.title = "No Markdown file found for this video.";
-                  linksContainer.appendChild(badge);
-                }
-              });
-            }
+        if (videoId) {
+          // Check if map object already has content (from DOM update)
+          if (!map.article_content) {
+            checkArticleExists(videoId).then((exists) => {
+              if (!exists) {
+                const linksContainer = card.querySelector(".links");
+                const badge = document.createElement("span");
+                badge.className = "missing-article-badge";
+                badge.textContent = "⚠️ المقال مفقود!";
+                badge.title = "لم يتم العثور على ملف Markdown لهذا الفيديو.";
+                linksContainer.appendChild(badge);
+              }
+            });
           }
         }
 
@@ -1307,12 +1394,12 @@
         // Delete handler
         card.querySelector(".delete-btn").addEventListener("click", (e) => {
           e.stopPropagation();
-          if (confirm("Are you sure you want to delete this item?")) {
+          if (confirm("هل أنت متأكد أنك تريد حذف هذا العنصر؟")) {
             card.remove();
             updateDataFromDOM();
             markChanged();
             const count = mapsList.querySelectorAll(".map-card").length;
-            channelInfo.textContent = `${currentChannel} — ${count} items`;
+            channelInfo.textContent = `${currentChannel} — ${count} عنصر`;
           }
         });
 
@@ -1325,11 +1412,11 @@
 
         // Update Modal Title
         addModal.querySelector("h2").textContent = card
-          ? "✎ Edit Item"
-          : "➕ Add New Item";
+          ? "✎ تعديل العنصر"
+          : "➕ إضافة عنصر";
         addModal.querySelector('button[type="submit"]').textContent = card
-          ? "Save Changes"
-          : "Add Item";
+          ? "حفظ التغييرات"
+          : "إضافة عنصر";
 
         // Fill form
         if (mapData) {
@@ -1346,7 +1433,7 @@
         // Populate textarea: try existing data first, then fetch file
         const textarea = document.getElementById("add-article-content");
         textarea.value = mapData ? mapData.article_content || "" : "";
-        textarea.placeholder = "Loading existing article...";
+        textarea.placeholder = "جاري تحميل المقال الموجود...";
 
         if (mapData && mapData.video_link && !textarea.value) {
           const videoId = extractVideoId(mapData.video_link);
@@ -1364,20 +1451,16 @@
               })
               .catch((err) => {
                 textarea.placeholder =
-                  "No existing article found. Write one here...";
+                  "لم يتم العثور على مقال. اكتب واحداً هنا...";
               });
           }
         } else if (!mapData) {
-          textarea.placeholder = "Write your article here...";
+          textarea.placeholder = "اكتب مقالك هنا...";
         }
       }
 
       function extractVideoId(url) {
-        if (!url) return null;
-        const match = url.match(
-          /(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/,
-        );
-        return match ? match[1] : null;
+        return TitleUtils.getVideoId(url);
       }
 
       addItemBtn.addEventListener("click", () => {
@@ -1608,7 +1691,7 @@
             markChanged(); // Mark as modified so user can save
             isSuccess = true;
           } else {
-            throw new Error("No article returned.");
+            throw new Error("لم يتم إرجاع أي مقال.");
           }
         } catch (error) {
           console.error("Generation failed:", error);
@@ -1616,7 +1699,7 @@
           const logEntry = document.createElement('div');
           logEntry.style.color = 'red';
           logEntry.style.fontWeight = 'bold';
-          logEntry.innerHTML = `<i class="fas fa-times-circle"></i> Error: ${error.message}`;
+          logEntry.innerHTML = `<i class="fas fa-times-circle"></i> خطأ: ${error.message}`;
           realtimeLogs.appendChild(logEntry);
           realtimeLogs.scrollTop = realtimeLogs.scrollHeight;
         } finally {
@@ -1643,7 +1726,7 @@
 
         // 2. Prompt User (Securely)
         const input = prompt(
-          "Please enter your GitHub Personal Access Token (PAT) to publish changes.\n\nThis will be saved in your browser locally.\nThe token needs 'actions:write' or 'workflow' permissions.",
+          "الرجاء إدخال رمز الوصول الشخصي (PAT) الخاص بـ GitHub لنشر التغييرات.\n\nسيتم حفظ الرمز محلياً في متصفحك.\nيحتاج الرمز إلى أذونات 'actions:write' أو 'workflow'.",
         );
 
         if (input && input.trim().length > 0) {
@@ -1660,25 +1743,29 @@
         // Rebuild current channel's data from DOM order
         const newMaps = [];
         mapsList.querySelectorAll(".map-card").forEach((card) => {
-          const content = card.querySelector(".map-card-content");
-          const links = content.querySelectorAll(".links a");
-
-          // Retrieve stored data attached to the card
+          // Retrieve stored data attached to the card - this is the correct source
           const existingData = card.dataset.mapData
             ? JSON.parse(card.dataset.mapData)
             : {};
 
           newMaps.push({
-            video_link: links[0].href,
-            map_link: links[1].href,
+            video_link: existingData.video_link || "",
+            map_link: existingData.map_link || "",
             article_content: existingData.article_content || "",
           });
         });
 
-        if (allChannelsData[currentChannel] && allChannelsData[currentChannel].links) {
+        // Always preserve the structured format { list_number, links }
+        if (allChannelsData[currentChannel] && typeof allChannelsData[currentChannel] === 'object' && !Array.isArray(allChannelsData[currentChannel])) {
+          // Channel already has the correct structure, just update links
           allChannelsData[currentChannel].links = newMaps;
         } else {
-          allChannelsData[currentChannel] = newMaps;
+          // Channel is missing or has wrong structure - create proper structure
+          const existingListNumber = allChannelsData[currentChannel]?.list_number ?? Object.keys(allChannelsData).length;
+          allChannelsData[currentChannel] = {
+            list_number: existingListNumber,
+            links: newMaps
+          };
         }
       }
 
@@ -1700,14 +1787,14 @@
 
       function getErrorMessage(errorCode) {
         const messages = {
-          "auth/invalid-email": "Invalid email address format.",
-          "auth/user-disabled": "This account has been disabled.",
-          "auth/user-not-found": "No account found with this email.",
-          "auth/wrong-password": "Incorrect password.",
-          "auth/invalid-credential": "Invalid login credentials.",
-          "auth/too-many-requests": "Too many failed attempts. Try later.",
+          "auth/invalid-email": "صيغة البريد الإلكتروني غير صالحة.",
+          "auth/user-disabled": "تم تعطيل هذا الحساب.",
+          "auth/user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني.",
+          "auth/wrong-password": "كلمة المرور غير صحيحة.",
+          "auth/invalid-credential": "بيانات تسجيل الدخول غير صالحة.",
+          "auth/too-many-requests": "محاولات فاشلة كثيرة جداً. حاول لاحقاً.",
         };
-        return messages[errorCode] || "An unexpected error occurred.";
+        return messages[errorCode] || "حدث خطأ غير متوقع.";
       }
 
       // Warn before leaving with unsaved changes
