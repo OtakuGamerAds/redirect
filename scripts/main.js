@@ -400,25 +400,19 @@ function generateFooter(isPagesDir) {
 
   const footer = document.createElement("footer");
   footer.className = "site-footer";
-  footer.style.textAlign = "center";
-  footer.style.padding = "2rem";
-  footer.style.marginTop = "auto"; // Push to bottom if flex container
-  footer.style.borderTop = "1px solid var(--border-color, #eee)";
-  footer.style.color = "var(--text-light, #666)";
-  footer.style.fontSize = "0.9rem";
 
   const prefix = isPagesDir ? "../" : "";
   const date = new Date().getFullYear();
 
   footer.innerHTML = `
-    <div style="margin-bottom: 1rem;">
-      <a href="${prefix}privacy/" style="color: inherit; margin: 0 10px; text-decoration: none;">سياسة الخصوصية</a>
-      <span>|</span>
-      <a href="${prefix}terms/" style="color: inherit; margin: 0 10px; text-decoration: none;">شروط الاستخدام</a>
-      <span>|</span>
-      <a href="${prefix}contact/" style="color: inherit; margin: 0 10px; text-decoration: none;">اتصل بنا</a>
+    <div style="margin-bottom: 0.5rem;">
+      <a href="${prefix}privacy/">سياسة الخصوصية</a>
+      <span style="opacity: 0.3; margin: 0 5px;">|</span>
+      <a href="${prefix}terms/">شروط الاستخدام</a>
+      <span style="opacity: 0.3; margin: 0 5px;">|</span>
+      <a href="${prefix}contact/">اتصل بنا</a>
     </div>
-    <div>
+    <div style="font-size: 0.85em; opacity: 0.8;">
       &copy; ${date} رحومي - جميع الحقوق محفوظة
     </div>
   `;
