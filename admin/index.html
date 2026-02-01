@@ -992,7 +992,10 @@
           if (docSnap.exists() && docSnap.data().maps) {
             const data = docSnap.data();
             allChannelsData = data.maps;
-            channelOrder = Object.keys(allChannelsData);
+            // Sort channels by list_number
+            channelOrder = Object.keys(allChannelsData).sort((a, b) => {
+              return (allChannelsData[a].list_number ?? 999) - (allChannelsData[b].list_number ?? 999);
+            });
             console.log("Loaded from Firestore:", channelOrder);
           } else {
             // Fallback: Load from local links.json
@@ -1002,8 +1005,10 @@
             );
             if (!response.ok) throw new Error("Failed to load links.json");
             allChannelsData = await response.json();
-            // Preserve the order from JSON (object keys in insertion order)
-            channelOrder = Object.keys(allChannelsData);
+            // Sort channels by list_number
+            channelOrder = Object.keys(allChannelsData).sort((a, b) => {
+              return (allChannelsData[a].list_number ?? 999) - (allChannelsData[b].list_number ?? 999);
+            });
             console.log("Loaded from links.json:", channelOrder);
           }
 
@@ -1209,7 +1214,9 @@
       function renderMapsList() {
         mapsList.innerHTML = "";
 
-        const maps = allChannelsData[currentChannel] || [];
+        // Access the links array from the new structure
+        const channelData = allChannelsData[currentChannel];
+        const maps = channelData?.links || channelData || [];
         channelInfo.textContent = `${currentChannel} — ${maps.length} items`;
 
         if (maps.length === 0) {

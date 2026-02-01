@@ -1,12 +1,14 @@
 /* Dark Mode Logic */
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme');
+  const savedTheme = localStorage.getItem("theme");
   if (savedTheme) {
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
   } else {
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
     if (systemPrefersDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute("data-theme", "dark");
     }
   }
 }
@@ -15,41 +17,45 @@ function initTheme() {
 initTheme();
 
 // Listen for system preference changes
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    if (!localStorage.getItem('theme')) { // Only update if no manual override
-        const newTheme = e.matches ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        updateThemeIcon(newTheme);
+window
+  .matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", (e) => {
+    if (!localStorage.getItem("theme")) {
+      // Only update if no manual override
+      const newTheme = e.matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", newTheme);
+      updateThemeIcon(newTheme);
     }
-});
+  });
 
 function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    updateThemeIcon(newTheme);
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+
+  updateThemeIcon(newTheme);
 }
 
 function updateThemeIcon(theme) {
-    const themeIcon = document.getElementById('theme-icon');
-    if (themeIcon) {
-        themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
+  const themeIcon = document.getElementById("theme-icon");
+  if (themeIcon) {
+    themeIcon.className = theme === "dark" ? "fas fa-sun" : "fas fa-moon";
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Set initial icon state
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    updateThemeIcon(currentTheme);
-    
-    // Add event listener to toggle button if it exists
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', toggleTheme);
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  // Set initial icon state
+  const currentTheme =
+    document.documentElement.getAttribute("data-theme") || "light";
+  updateThemeIcon(currentTheme);
+
+  // Add event listener to toggle button if it exists
+  const themeToggleBtn = document.getElementById("theme-toggle");
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", toggleTheme);
+  }
 });
 /* End Dark Mode Logic */
 
@@ -65,13 +71,13 @@ async function loadConfig() {
     // Robust check: Look at how main.js was imported in the HTML.
     // If imported as "../scripts/main.js", we are in a subdirectory.
     let isPagesDir = false;
-    const scripts = document.getElementsByTagName('script');
+    const scripts = document.getElementsByTagName("script");
     for (let script of scripts) {
-        const src = script.getAttribute("src");
-        if (src && src.includes("scripts/main.js") && src.startsWith("../")) {
-            isPagesDir = true;
-            break;
-        }
+      const src = script.getAttribute("src");
+      if (src && src.includes("scripts/main.js") && src.startsWith("../")) {
+        isPagesDir = true;
+        break;
+      }
     }
 
     // Cache busting: Append timestamp to force fresh fetch
@@ -90,7 +96,7 @@ async function loadConfig() {
     }
 
     if (data.collaborators) {
-        window.siteCollaborators = data.collaborators;
+      window.siteCollaborators = data.collaborators;
     }
 
     populateContent(data, isPagesDir);
@@ -98,19 +104,28 @@ async function loadConfig() {
     generateHomeNav(data.nav);
 
     // Check for Videos Page (matches both /videos/ and videos.html for backward compat)
-    if (window.location.pathname.includes("videos/") || window.location.pathname.includes("videos.html")) {
+    if (
+      window.location.pathname.includes("videos/") ||
+      window.location.pathname.includes("videos.html")
+    ) {
       // Dynamically set page title from nav config
       // Look for nav item with "videos/" OR "videos.html"
-      const videosNav = data.nav.find((item) => item.url.includes("videos/") || item.url.includes("videos.html"));
+      const videosNav = data.nav.find(
+        (item) =>
+          item.url.includes("videos/") || item.url.includes("videos.html"),
+      );
       const pageTitle = document.getElementById("page-title");
       if (videosNav && pageTitle) {
         pageTitle.textContent = videosNav.text;
       }
-      loadRobloxMaps(isPagesDir); 
+      loadRobloxMaps(isPagesDir);
     }
 
-    if (window.location.pathname.includes("article/") || window.location.pathname.includes("article.html")) {
-        loadArticlePage(isPagesDir);
+    if (
+      window.location.pathname.includes("article/") ||
+      window.location.pathname.includes("article.html")
+    ) {
+      loadArticlePage(isPagesDir);
     }
   } catch (error) {
     console.error("Error loading site data:", error);
@@ -224,11 +239,11 @@ function generateNav(navItems, isPagesDir) {
     // Adjust URL based on current depth
     let finalUrl = item.url;
     if (isPagesDir) {
-       // If we are in a subdir, we need to go up one level for everything
-       // except if the url is meant to be absolute (http) which is not the case for nav items usually
-       if (!item.url.startsWith("http")) {
-            finalUrl = "../" + item.url;
-       }
+      // If we are in a subdir, we need to go up one level for everything
+      // except if the url is meant to be absolute (http) which is not the case for nav items usually
+      if (!item.url.startsWith("http")) {
+        finalUrl = "../" + item.url;
+      }
     } else {
       // In root, use canonical
     }
@@ -238,15 +253,15 @@ function generateNav(navItems, isPagesDir) {
 
     // Special styling for Videos link to match toggle button
     if (item.url.includes("videos.html") || item.url.includes("videos/")) {
-        a.classList.add("btn");
-        a.style.padding = "0.5rem 1rem";
-        a.style.color = "white";
-        a.style.display = "inline-flex";
-        a.style.alignItems = "center";
-        
-        // Ensure no default hover color override issues if needed, but btn class handles most
-        // We might want to ensure it looks distinct or exactly like the toggle?
-        // The user said "become a button box too", generic .btn class does this with primary color.
+      a.classList.add("btn");
+      a.style.padding = "0.5rem 1rem";
+      a.style.color = "white";
+      a.style.display = "inline-flex";
+      a.style.alignItems = "center";
+
+      // Ensure no default hover color override issues if needed, but btn class handles most
+      // We might want to ensure it looks distinct or exactly like the toggle?
+      // The user said "become a button box too", generic .btn class does this with primary color.
     }
 
     // Simple active check
@@ -289,18 +304,20 @@ function generateHomeNav(navItems) {
   container.innerHTML = "";
 
   // Directly find the Videos item
-  const videosItem = navItems.find((item) => item.url.includes("videos/") || item.url.includes("videos.html"));
+  const videosItem = navItems.find(
+    (item) => item.url.includes("videos/") || item.url.includes("videos.html"),
+  );
 
   if (videosItem) {
     const a = document.createElement("a");
     a.href = videosItem.url;
-    
+
     // Apply styling and animation class directly
     a.className = "btn videos-btn-animate";
     a.style.width = "100%";
     a.style.display = "block";
     a.style.textAlign = "center";
-    
+
     // Add text and emoji
     a.innerHTML = `${videosItem.text} <span style="margin-right: 0.5rem;">🎮</span>`;
 
@@ -350,13 +367,18 @@ async function fetchAndRenderMaps(isPagesDir) {
 
     allMapsDataFull = await response.json();
 
-    // Render Buttons from Keys
+    // Render Buttons from Keys (sorted by list_number)
     renderChannelButtons();
 
-    // Default to first key if not set
-    const keys = Object.keys(allMapsDataFull);
-    if (!currentChannel && keys.length > 0) {
-      currentChannel = keys[0];
+    // Default to first key if not set (first by list_number)
+    const sortedKeys = Object.keys(allMapsDataFull).sort((a, b) => {
+      return (
+        (allMapsDataFull[a].list_number ?? 999) -
+        (allMapsDataFull[b].list_number ?? 999)
+      );
+    });
+    if (!currentChannel && sortedKeys.length > 0) {
+      currentChannel = sortedKeys[0];
     }
 
     // Update selection UI
@@ -382,7 +404,9 @@ function resetAndRender() {
   loadedCount = 0;
 
   if (currentChannel && allMapsDataFull[currentChannel]) {
-    allMapsData = allMapsDataFull[currentChannel];
+    // Access the links array from the new structure
+    allMapsData =
+      allMapsDataFull[currentChannel].links || allMapsDataFull[currentChannel];
     appendMaps(); // Load first batch
   } else {
     grid.innerHTML = "<p>No channels found.</p>";
@@ -431,137 +455,146 @@ const channelDataCache = {};
 const channelFetchPromises = {};
 
 async function fetchVideoTitle(videoUrl) {
-    if (!videoUrl) return null;
-    if (videoTitleCache[videoUrl]) return videoTitleCache[videoUrl];
+  if (!videoUrl) return null;
+  if (videoTitleCache[videoUrl]) return videoTitleCache[videoUrl];
 
-    try {
-        const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`);
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data = await response.json();
-        if (data.title) {
-            videoTitleCache[videoUrl] = data.title;
-            return data.title;
-        }
-    } catch (error) {
-        console.warn("Failed to fetch video title for:", videoUrl, error);
+  try {
+    const response = await fetch(
+      `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`,
+    );
+    if (!response.ok) throw new Error("Network response was not ok");
+    const data = await response.json();
+    if (data.title) {
+      videoTitleCache[videoUrl] = data.title;
+      return data.title;
     }
-    return null;
+  } catch (error) {
+    console.warn("Failed to fetch video title for:", videoUrl, error);
+  }
+  return null;
 }
 
 // Fetch channel info using microlink.io
 async function fetchChannelInfo(handle) {
-    if (channelDataCache[handle]) return channelDataCache[handle];
-    if (channelFetchPromises[handle]) return channelFetchPromises[handle];
+  if (channelDataCache[handle]) return channelDataCache[handle];
+  if (channelFetchPromises[handle]) return channelFetchPromises[handle];
 
-    const fetchPromise = (async () => {
-        const channelUrl = `https://www.youtube.com/@${handle}`;
-        try {
-            const response = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(channelUrl)}`);
-            if (!response.ok) throw new Error("Microlink fetch failed");
-            
-            const json = await response.json();
-            if (json.status === 'success' && json.data) {
-                const info = {
-                    name: json.data.author || json.data.title || handle,
-                    url: json.data.url || channelUrl,
-                    image: json.data.image ? json.data.image.url : null,
-                    logo: json.data.logo ? json.data.logo.url : null
-                };
-                // Prefer logo/image
-                info.avatar = info.image || info.logo || `https://unavatar.io/youtube/@${handle}`;
-                
-                channelDataCache[handle] = info;
-                return info;
-            }
-        } catch (error) {
-            console.warn("Error fetching channel info for", handle, error);
-        }
-        
-        // Fallback if failed
-        const fallbackInfo = {
-            name: handle,
-            url: channelUrl,
-            avatar: `https://unavatar.io/youtube/@${handle}`
+  const fetchPromise = (async () => {
+    const channelUrl = `https://www.youtube.com/@${handle}`;
+    try {
+      const response = await fetch(
+        `https://api.microlink.io/?url=${encodeURIComponent(channelUrl)}`,
+      );
+      if (!response.ok) throw new Error("Microlink fetch failed");
+
+      const json = await response.json();
+      if (json.status === "success" && json.data) {
+        const info = {
+          name: json.data.author || json.data.title || handle,
+          url: json.data.url || channelUrl,
+          image: json.data.image ? json.data.image.url : null,
+          logo: json.data.logo ? json.data.logo.url : null,
         };
-        channelDataCache[handle] = fallbackInfo;
-        return fallbackInfo;
-    })();
+        // Prefer logo/image
+        info.avatar =
+          info.image || info.logo || `https://unavatar.io/youtube/@${handle}`;
 
-    channelFetchPromises[handle] = fetchPromise;
-    
-    // Clear promise from cache when done (optional, but data cache handles future requests)
-    // We keep it simple: channelDataCache takes precedence, so next call returns data immediately.
-    
-    return fetchPromise;
+        channelDataCache[handle] = info;
+        return info;
+      }
+    } catch (error) {
+      console.warn("Error fetching channel info for", handle, error);
+    }
+
+    // Fallback if failed
+    const fallbackInfo = {
+      name: handle,
+      url: channelUrl,
+      avatar: `https://unavatar.io/youtube/@${handle}`,
+    };
+    channelDataCache[handle] = fallbackInfo;
+    return fallbackInfo;
+  })();
+
+  channelFetchPromises[handle] = fetchPromise;
+
+  // Clear promise from cache when done (optional, but data cache handles future requests)
+  // We keep it simple: channelDataCache takes precedence, so next call returns data immediately.
+
+  return fetchPromise;
 }
 
 function formatTitleWithBadges(title) {
-    if (!title) return "";
-    
-    // Clean up title (remove specific phrases)
-    // Phrases: "روبولكس : ", " في لعبة روبلوكس", " في روبلوكس", "روبلوكس: ", "روبلوكس ولكن ", "روبلوكس : ولكن ", "روبلوكس "
-    let cleaned = title.replace(/روبولكس : /g, "") // Handle typo version just in case
-                       .replace(/روبلوكس : ولكن /g, "")
-                       .replace(/روبلوكس : /g, "") // Correct spelling with space before colon
-                       .replace(/روبلوكس: /g, "")
-                       .replace(/روبلوكس ولكن /g, "")
-                       .replace(/روبلوكس /g, "")
-                       .replace(/ في لعبة روبلوكس/g, "")
-                       .replace(/ في روبلوكس/g, "");
-    
-    // Clean potential leftover starting punctuation like ": " or " :"
-    cleaned = cleaned.trim().replace(/^[:\s-]+/g, "").trim();
+  if (!title) return "";
 
-    // Regex to find @Handle (alphanumeric, underscore, dot, hyphen)
-    // Matches @FollowedByChars until a space or end of string or non-handle char
-    const regex = /@([a-zA-Z0-9_.-]+)/g;
+  // Clean up title (remove specific phrases)
+  // Phrases: "روبولكس : ", " في لعبة روبلوكس", " في روبلوكس", "روبلوكس: ", "روبلوكس ولكن ", "روبلوكس : ولكن ", "روبلوكس "
+  let cleaned = title
+    .replace(/روبولكس : /g, "") // Handle typo version just in case
+    .replace(/روبلوكس : ولكن /g, "")
+    .replace(/روبلوكس : /g, "") // Correct spelling with space before colon
+    .replace(/روبلوكس: /g, "")
+    .replace(/روبلوكس ولكن /g, "")
+    .replace(/روبلوكس /g, "")
+    .replace(/ في لعبة روبلوكس/g, "")
+    .replace(/ في روبلوكس/g, "");
 
-    return cleaned.replace(regex, (match, handle) => {
-        // Return a placeholder badge that we will hydrate asynchronously
-        // We use a specific class and data attribute to find it later
-        return `<a href="https://www.youtube.com/@${handle}" target="_blank" class="youtuber-badge pending-badge" data-handle="${handle}" onclick="event.stopPropagation();">
+  // Clean potential leftover starting punctuation like ": " or " :"
+  cleaned = cleaned
+    .trim()
+    .replace(/^[:\s-]+/g, "")
+    .trim();
+
+  // Regex to find @Handle (alphanumeric, underscore, dot, hyphen)
+  // Matches @FollowedByChars until a space or end of string or non-handle char
+  const regex = /@([a-zA-Z0-9_.-]+)/g;
+
+  return cleaned.replace(regex, (match, handle) => {
+    // Return a placeholder badge that we will hydrate asynchronously
+    // We use a specific class and data attribute to find it later
+    return `<a href="https://www.youtube.com/@${handle}" target="_blank" class="youtuber-badge pending-badge" data-handle="${handle}" onclick="event.stopPropagation();">
             <i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>
             <span>${handle}</span>
         </a>`;
-    });
+  });
 }
 
 async function processBadges(container) {
-    const badges = container.querySelectorAll('.youtuber-badge.pending-badge');
-    
-    for (const badge of badges) {
-        const handle = badge.dataset.handle;
-        
-        // Remove pending class to avoid double processing if called multiple times
-        badge.classList.remove('pending-badge');
-        
-        // Check manual overrides first
-        if (window.siteCollaborators && window.siteCollaborators[`@${handle}`]) {
-            const data = window.siteCollaborators[`@${handle}`];
-            updateBadgeUI(badge, data.name, data.avatar, data.url);
-            continue;
-        }
+  const badges = container.querySelectorAll(".youtuber-badge.pending-badge");
 
-        // Fetch dynamic data
-        fetchChannelInfo(handle).then(info => {
-             updateBadgeUI(badge, info.name, info.avatar, info.url);
-        });
+  for (const badge of badges) {
+    const handle = badge.dataset.handle;
+
+    // Remove pending class to avoid double processing if called multiple times
+    badge.classList.remove("pending-badge");
+
+    // Check manual overrides first
+    if (window.siteCollaborators && window.siteCollaborators[`@${handle}`]) {
+      const data = window.siteCollaborators[`@${handle}`];
+      updateBadgeUI(badge, data.name, data.avatar, data.url);
+      continue;
     }
+
+    // Fetch dynamic data
+    fetchChannelInfo(handle).then((info) => {
+      updateBadgeUI(badge, info.name, info.avatar, info.url);
+    });
+  }
 }
 
 function updateBadgeUI(badge, name, avatar, url) {
-    badge.href = url;
-    
-    let content = "";
-    if (avatar) {
-        content += `<img src="${avatar}" alt="${name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />`;
-        content += `<i class="fab fa-youtube fallback-icon" style="display:none; margin-left:5px; color: #ff0000;"></i>`;
-    } else {
-        content += `<i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>`;
-    }
-    content += `<span>${name}</span>`;
-    
-    badge.innerHTML = content;
+  badge.href = url;
+
+  let content = "";
+  if (avatar) {
+    content += `<img src="${avatar}" alt="${name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />`;
+    content += `<i class="fab fa-youtube fallback-icon" style="display:none; margin-left:5px; color: #ff0000;"></i>`;
+  } else {
+    content += `<i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>`;
+  }
+  content += `<span>${name}</span>`;
+
+  badge.innerHTML = content;
 }
 
 function createMapCard(item) {
@@ -571,34 +604,35 @@ function createMapCard(item) {
   card.style.overflow = "hidden";
   card.style.cursor = "pointer";
   card.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
-  
+
   // Hover effect to indicate clickable
   card.onmouseenter = () => {
-      card.style.transform = "translateY(-5px)";
-      card.style.boxShadow = "var(--shadow-lg)";
+    card.style.transform = "translateY(-5px)";
+    card.style.boxShadow = "var(--shadow-lg)";
   };
   card.onmouseleave = () => {
-      card.style.transform = "translateY(0)";
-      card.style.boxShadow = "var(--shadow-md)";
+    card.style.transform = "translateY(0)";
+    card.style.boxShadow = "var(--shadow-md)";
   };
 
   // Click Action
   const videoId = getVideoId(item.video_link);
   if (videoId) {
-      card.onclick = () => {
-          // Check if we are in a subdirectory (like /videos/)
-          // Foolproof check: explicitly check path segments
-          const path = window.location.pathname;
-          // If we are in /videos/, /about/, /contact/, /article/, /redirect/
-          const isPagesDir = path.includes("/videos/") || 
-                             path.includes("/about/") || 
-                             path.includes("/contact/") || 
-                             path.includes("/article/") || 
-                             path.includes("/redirect/");
+    card.onclick = () => {
+      // Check if we are in a subdirectory (like /videos/)
+      // Foolproof check: explicitly check path segments
+      const path = window.location.pathname;
+      // If we are in /videos/, /about/, /contact/, /article/, /redirect/
+      const isPagesDir =
+        path.includes("/videos/") ||
+        path.includes("/about/") ||
+        path.includes("/contact/") ||
+        path.includes("/article/") ||
+        path.includes("/redirect/");
 
-          const target = isPagesDir ? "../article/" : "article/";
-          window.location.href = `${target}?id=${videoId}`;
-      };
+      const target = isPagesDir ? "../article/" : "article/";
+      window.location.href = `${target}?id=${videoId}`;
+    };
   }
 
   // 1. Thumbnail
@@ -631,23 +665,23 @@ function createMapCard(item) {
   // Title
   const title = document.createElement("h3");
   // Use innerHTML to allow badges
-  title.innerHTML = 'Loading...';
+  title.innerHTML = "Loading...";
   title.style.margin = "0";
-  title.style.lineHeight = "1.8"; 
-  title.classList.add("map-title"); 
-  
+  title.style.lineHeight = "1.8";
+  title.classList.add("map-title");
+
   processBadges(title);
 
   // Async fetch title
-  fetchVideoTitle(item.video_link).then(fetchedTitle => {
-      if (fetchedTitle) {
-          title.innerHTML = formatTitleWithBadges(fetchedTitle);
-          processBadges(title);
-      }
+  fetchVideoTitle(item.video_link).then((fetchedTitle) => {
+    if (fetchedTitle) {
+      title.innerHTML = formatTitleWithBadges(fetchedTitle);
+      processBadges(title);
+    }
   });
 
   infoDiv.appendChild(title);
-  
+
   // Buttons removed as requested
 
   card.appendChild(infoDiv);
@@ -690,7 +724,15 @@ function renderChannelButtons() {
 
   container.innerHTML = "";
 
-  Object.keys(allMapsDataFull).forEach((key) => {
+  // Sort channels by list_number
+  const sortedKeys = Object.keys(allMapsDataFull).sort((a, b) => {
+    return (
+      (allMapsDataFull[a].list_number ?? 999) -
+      (allMapsDataFull[b].list_number ?? 999)
+    );
+  });
+
+  sortedKeys.forEach((key) => {
     const btn = document.createElement("button");
     btn.textContent = key;
     btn.className = "btn";
@@ -743,51 +785,52 @@ function getYouTubeThumbnail(url) {
 }
 // Helper to get raw video ID
 function getVideoId(url) {
-    if (!url) return null;
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
-    return match ? match[1] : null;
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&]+)/);
+  return match ? match[1] : null;
 }
 
 function getRobloxPlaceId(url) {
-    if (!url) return null;
-    // Standard URL: https://www.roblox.com/games/920587237/Adopt-Me
-    // Also handles: https://www.roblox.com/games/920587237 (no trailing slash or name)
-    const match = url.match(/roblox\.com\/games\/(\d+)/);
-    return match ? match[1] : null;
+  if (!url) return null;
+  // Standard URL: https://www.roblox.com/games/920587237/Adopt-Me
+  // Also handles: https://www.roblox.com/games/920587237 (no trailing slash or name)
+  const match = url.match(/roblox\.com\/games\/(\d+)/);
+  return match ? match[1] : null;
 }
 
 // Function to get game name
 async function getRobloxGameName(placeId) {
-    // We use a public proxy to bypass CORS restrictions
-    // 'corsproxy.io' was blocked (403), switching to 'api.codetabs.com'
-    const proxy = 'https://api.codetabs.com/v1/proxy?quest='; 
+  // We use a public proxy to bypass CORS restrictions
+  // 'corsproxy.io' was blocked (403), switching to 'api.codetabs.com'
+  const proxy = "https://api.codetabs.com/v1/proxy?quest=";
 
-    try {
-        // Step 1: Get the Universe ID from the Place ID
-        const universeUrl = `https://apis.roblox.com/universes/v1/places/${placeId}/universe`;
-        const universeResponse = await fetch(proxy + encodeURIComponent(universeUrl));
-        
-        if (!universeResponse.ok) throw new Error('Failed to get Universe ID');
-        const universeData = await universeResponse.json();
-        const universeId = universeData.universeId;
+  try {
+    // Step 1: Get the Universe ID from the Place ID
+    const universeUrl = `https://apis.roblox.com/universes/v1/places/${placeId}/universe`;
+    const universeResponse = await fetch(
+      proxy + encodeURIComponent(universeUrl),
+    );
 
-        // Step 2: Get the Game Name using the Universe ID
-        const gameUrl = `https://games.roblox.com/v1/games?universeIds=${universeId}`;
-        const gameResponse = await fetch(proxy + encodeURIComponent(gameUrl));
-        
-        if (!gameResponse.ok) throw new Error('Failed to get Game Details');
-        const gameData = await gameResponse.json();
-        
-        return gameData.data[0].name;
-        
-    } catch (error) {
-        console.warn('Error fetching Roblox game name:', error.message);
-        return null;
-    }
+    if (!universeResponse.ok) throw new Error("Failed to get Universe ID");
+    const universeData = await universeResponse.json();
+    const universeId = universeData.universeId;
+
+    // Step 2: Get the Game Name using the Universe ID
+    const gameUrl = `https://games.roblox.com/v1/games?universeIds=${universeId}`;
+    const gameResponse = await fetch(proxy + encodeURIComponent(gameUrl));
+
+    if (!gameResponse.ok) throw new Error("Failed to get Game Details");
+    const gameData = await gameResponse.json();
+
+    return gameData.data[0].name;
+  } catch (error) {
+    console.warn("Error fetching Roblox game name:", error.message);
+    return null;
+  }
 }
 
 function escapeHtml(text) {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
@@ -797,237 +840,260 @@ let player;
 let youtubeApiPromise = null;
 
 function loadYouTubeApi() {
-    if (youtubeApiPromise) return youtubeApiPromise;
-    youtubeApiPromise = new Promise((resolve) => {
-        if (window.YT && window.YT.Player) {
-            resolve();
-            return;
-        }
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        window.onYouTubeIframeAPIReady = () => resolve();
-    });
-    return youtubeApiPromise;
+  if (youtubeApiPromise) return youtubeApiPromise;
+  youtubeApiPromise = new Promise((resolve) => {
+    if (window.YT && window.YT.Player) {
+      resolve();
+      return;
+    }
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName("script")[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    window.onYouTubeIframeAPIReady = () => resolve();
+  });
+  return youtubeApiPromise;
 }
 
 async function loadArticlePage(isPagesDir) {
-    const loader = document.getElementById("article-loader");
-    const view = document.getElementById("article-view");
-    
+  const loader = document.getElementById("article-loader");
+  const view = document.getElementById("article-view");
+
+  try {
+    // Get ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    if (!id) throw new Error("No video ID specified");
+
+    // Load Links
+    const configPath =
+      (isPagesDir ? `../${CONFIG_FILE}` : CONFIG_FILE) +
+      "?t=" +
+      new Date().getTime();
+    const response = await fetch(configPath);
+    if (!response.ok) throw new Error("Failed to load links config");
+    const linksData = await response.json();
+
+    // Find Item (Search all channels)
+    let item = null;
+    for (const channel in linksData) {
+      const found = linksData[channel].find(
+        (i) => getVideoId(i.video_link) === id,
+      );
+      if (found) {
+        item = found;
+        break;
+      }
+    }
+
+    if (!item) throw new Error("Video not found in database");
+
+    // Update Metadata
+    document.title = `Loading... - رحومي`;
+
+    // Fetch Game Name dynamically if possible (Progressive Enhancement Pattern)
+    const placeId = getRobloxPlaceId(item.map_link);
+    const gameNamePromise = placeId
+      ? getRobloxGameName(placeId).catch(() => "Roblox Game")
+      : Promise.resolve("Roblox Game");
+
+    // Async fetch accurate title if possible
+    fetchVideoTitle(item.video_link).then((fetchedTitle) => {
+      if (fetchedTitle) {
+        document.title = `${fetchedTitle} - رحومي`;
+      }
+    });
+
+    // Setup Video with YouTube API
+    await loadYouTubeApi();
+
+    // Add origin to enablejsapi for security/reliability
+    const origin = window.location.origin;
+    const embedUrl = `https://www.youtube.com/embed/${id}?enablejsapi=1&origin=${origin}&rel=0`;
+    const iframe = document.getElementById("video-embed");
+    iframe.src = embedUrl;
+
+    // Ensure allow attribute has autoplay permissions (critical for programmatic play)
+    if (
+      !iframe.getAttribute("allow") ||
+      !iframe.getAttribute("allow").includes("autoplay")
+    ) {
+      iframe.setAttribute(
+        "allow",
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+      );
+    }
+
+    // Initialize Player
+    if (player) {
+      try {
+        player.destroy();
+      } catch (e) {
+        console.warn("Error destroying player", e);
+      }
+    }
+
+    player = new YT.Player("video-embed", {
+      events: {
+        onReady: (event) => {
+          // Player ready
+        },
+      },
+    });
+
+    // Setup Play Button
+    const playBtn = document.getElementById("game-play-btn");
+    const redirectPrefix = isPagesDir ? "../" : "";
+    if (enableRedirection) {
+      playBtn.href = `${redirectPrefix}redirect/?id=${id}`;
+    } else {
+      playBtn.href = item.map_link;
+    }
+
+    // Analytics Tracking
+    playBtn.addEventListener("click", () => {
+      if (typeof gtag === "function") {
+        gtag("event", "play_game", {
+          redirect_enabled: enableRedirection,
+          destination_url: playBtn.href,
+        });
+      }
+    });
+
+    // Fetch Article Markdown
+    let mdPath = `../assets/articles/${id}.md?t=${new Date().getTime()}`;
+
     try {
-        // Get ID from URL
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get("id");
-        
-        if (!id) throw new Error("No video ID specified");
-        
-        // Load Links
-        const configPath = (isPagesDir ? `../${CONFIG_FILE}` : CONFIG_FILE) + "?t=" + new Date().getTime();
-        const response = await fetch(configPath);
-        if (!response.ok) throw new Error("Failed to load links config");
-        const linksData = await response.json();
-        
-        // Find Item (Search all channels)
-        let item = null;
-        for (const channel in linksData) {
-            const found = linksData[channel].find(i => getVideoId(i.video_link) === id);
-            if (found) {
-                item = found;
-                break;
-            }
-        }
-        
-        if (!item) throw new Error("Video not found in database");
-        
-        // Update Metadata
-        document.title = `Loading... - رحومي`;
-        
-        // Fetch Game Name dynamically if possible (Progressive Enhancement Pattern)
-        const placeId = getRobloxPlaceId(item.map_link);
-        const gameNamePromise = placeId ? getRobloxGameName(placeId).catch(() => "Roblox Game") : Promise.resolve("Roblox Game");
+      const mdResponse = await fetch(mdPath);
+      if (!mdResponse.ok) {
+        // If not found, just hide content and swallow error
+        document.getElementById("article-content").style.display = "none";
+      } else {
+        let mdText = await mdResponse.text();
 
-        // Async fetch accurate title if possible
-        fetchVideoTitle(item.video_link).then(fetchedTitle => {
-            if (fetchedTitle) {
-               document.title = `${fetchedTitle} - رحومي`;
-            }
+        // Process Timestamps: (m:ss) -> Link
+        // Regex matches (m:ss) or (mm:ss) or (h:mm:ss) inside parentheses
+        const timestampRegex = /\((\d{1,2}:\d{2}(?::\d{2})?)\)/g;
+        mdText = mdText.replace(timestampRegex, (match, time) => {
+          return `<a href="#" class="timestamp-link" data-time="${time}">(${time})</a>`;
         });
 
-        // Setup Video with YouTube API
-        await loadYouTubeApi();
-        
-        // Add origin to enablejsapi for security/reliability
-        const origin = window.location.origin;
-        const embedUrl = `https://www.youtube.com/embed/${id}?enablejsapi=1&origin=${origin}&rel=0`;
-        const iframe = document.getElementById("video-embed");
-        iframe.src = embedUrl;
-        
-        // Ensure allow attribute has autoplay permissions (critical for programmatic play)
-        if (!iframe.getAttribute('allow') || !iframe.getAttribute('allow').includes('autoplay')) {
-            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
-        }
+        // Convert Markdown to HTML
+        if (typeof marked !== "undefined") {
+          const contentDiv = document.getElementById("article-content");
+          let parsedHtml = marked.parse(mdText);
 
-        // Initialize Player
-        if (player) {
-            try { player.destroy(); } catch(e) { console.warn("Error destroying player", e); }
-        }
-        
-        player = new YT.Player('video-embed', {
-            events: {
-                'onReady': (event) => {
-                     // Player ready
-                }
-            }
-        });
-        
-         // Setup Play Button
-         const playBtn = document.getElementById("game-play-btn");
-         const redirectPrefix = isPagesDir ? "../" : "";
-         if (enableRedirection) {
-             playBtn.href = `${redirectPrefix}redirect/?id=${id}`;
-         } else {
-             playBtn.href = item.map_link;
-         }
-
-         // Analytics Tracking
-         playBtn.addEventListener("click", () => {
-           if (typeof gtag === "function") {
-             gtag("event", "play_game", {
-               redirect_enabled: enableRedirection,
-               destination_url: playBtn.href,
-             });
-           }
-         });
-        
-        // Fetch Article Markdown
-        let mdPath = `../assets/articles/${id}.md?t=${new Date().getTime()}`;
-        
-        try {
-            const mdResponse = await fetch(mdPath);
-            if (!mdResponse.ok) {
-                // If not found, just hide content and swallow error
-                document.getElementById("article-content").style.display = 'none';
-            } else {
-                 let mdText = await mdResponse.text();
-                 
-                 // Process Timestamps: (m:ss) -> Link
-                 // Regex matches (m:ss) or (mm:ss) or (h:mm:ss) inside parentheses
-                 const timestampRegex = /\((\d{1,2}:\d{2}(?::\d{2})?)\)/g;
-                 mdText = mdText.replace(timestampRegex, (match, time) => {
-                     return `<a href="#" class="timestamp-link" data-time="${time}">(${time})</a>`;
-                 });
-
-                 // Convert Markdown to HTML
-                if (typeof marked !== 'undefined') {
-                    const contentDiv = document.getElementById("article-content");
-                    let parsedHtml = marked.parse(mdText);
-                    
-                    // Progressive Enhancement: Replace placeholder with a hook AFTER parsing
-                    // This ensures the span is not escaped by the markdown parser.
-                    parsedHtml = parsedHtml.replace(/\$\{GAME_NAME\}/g, `
+          // Progressive Enhancement: Replace placeholder with a hook AFTER parsing
+          // This ensures the span is not escaped by the markdown parser.
+          parsedHtml = parsedHtml.replace(
+            /\$\{GAME_NAME\}/g,
+            `
                         <span class="dynamic-game-name youtuber-badge" style="cursor: pointer; text-decoration: none;" onclick="scrollToPlayButton(event)">
                             <i class="fas fa-gamepad" style="margin-left:5px;"></i>
                             <span class="game-name-text">جاري تحميل اسم اللعبة...</span>
                         </span>
-                    `);
-                    
-                    contentDiv.innerHTML = parsedHtml;
-                    contentDiv.style.display = 'block';
+                    `,
+          );
 
-                    // Update hooks when API returns
-                    gameNamePromise.then(name => {
-                        if (name && name !== "Roblox Game") {
-                            const targets = document.querySelectorAll('.dynamic-game-name .game-name-text');
-                            targets.forEach(el => el.textContent = name);
-                        }
-                    });
+          contentDiv.innerHTML = parsedHtml;
+          contentDiv.style.display = "block";
 
-                    // Add click listeners to timestamps
-                    contentDiv.querySelectorAll('.timestamp-link').forEach(link => {
-                        link.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            const timeStr = link.getAttribute('data-time');
-                            const parts = timeStr.split(':').map(Number);
-                            let seconds = 0;
-                            if (parts.length === 2) {
-                                seconds = parts[0] * 60 + parts[1];
-                            } else if (parts.length === 3) {
-                                seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-                            }
-
-                            if (player && typeof player.loadVideoById === 'function') {
-                                const playerState = player.getPlayerState();
-                                // -1 (unstarted), 5 (video cued)
-                                
-                                if (playerState === -1 || playerState === 5) {
-                                    // If unstarted, seekTo might not start playback reliably in all browsers/contexts.
-                                    // loadVideoById forces a reload/start at the specific time.
-                                    player.loadVideoById({
-                                        videoId: id,
-                                        startSeconds: seconds
-                                    });
-                                } else {
-                                    // If already active, just seek and ensure playing.
-                                    // Order: seek then play seems safer to ensure "play" is the final command,
-                                    // but we previously tried play then seek.
-                                    // Let's do seek then play.
-                                    player.seekTo(seconds, true);
-                                    player.playVideo();
-                                }
-                                
-                                // Scroll video into view
-                                const videoWrapper = document.querySelector('.video-wrapper');
-                                if (videoWrapper) {
-                                    videoWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                }
-                            }
-                        });
-                    });
-
-                } else {
-                    console.error("Marked library not loaded");
-                    document.getElementById("article-content").style.display = 'none';
-                }
+          // Update hooks when API returns
+          gameNamePromise.then((name) => {
+            if (name && name !== "Roblox Game") {
+              const targets = document.querySelectorAll(
+                ".dynamic-game-name .game-name-text",
+              );
+              targets.forEach((el) => (el.textContent = name));
             }
-        } catch (e) {
-            console.warn("Could not load article markdown:", e);
-             document.getElementById("article-content").style.display = 'none';
-        }
+          });
 
-        // Show Content (Even if article is missing)
-        if(loader) loader.style.display = "none";
-        if(view) view.style.display = "block";
-        
-    } catch (err) {
-        console.error("Error loading article:", err);
-        if(loader) {
-            loader.innerHTML = `
+          // Add click listeners to timestamps
+          contentDiv.querySelectorAll(".timestamp-link").forEach((link) => {
+            link.addEventListener("click", (e) => {
+              e.preventDefault();
+              const timeStr = link.getAttribute("data-time");
+              const parts = timeStr.split(":").map(Number);
+              let seconds = 0;
+              if (parts.length === 2) {
+                seconds = parts[0] * 60 + parts[1];
+              } else if (parts.length === 3) {
+                seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+              }
+
+              if (player && typeof player.loadVideoById === "function") {
+                const playerState = player.getPlayerState();
+                // -1 (unstarted), 5 (video cued)
+
+                if (playerState === -1 || playerState === 5) {
+                  // If unstarted, seekTo might not start playback reliably in all browsers/contexts.
+                  // loadVideoById forces a reload/start at the specific time.
+                  player.loadVideoById({
+                    videoId: id,
+                    startSeconds: seconds,
+                  });
+                } else {
+                  // If already active, just seek and ensure playing.
+                  // Order: seek then play seems safer to ensure "play" is the final command,
+                  // but we previously tried play then seek.
+                  // Let's do seek then play.
+                  player.seekTo(seconds, true);
+                  player.playVideo();
+                }
+
+                // Scroll video into view
+                const videoWrapper = document.querySelector(".video-wrapper");
+                if (videoWrapper) {
+                  videoWrapper.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                }
+              }
+            });
+          });
+        } else {
+          console.error("Marked library not loaded");
+          document.getElementById("article-content").style.display = "none";
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load article markdown:", e);
+      document.getElementById("article-content").style.display = "none";
+    }
+
+    // Show Content (Even if article is missing)
+    if (loader) loader.style.display = "none";
+    if (view) view.style.display = "block";
+  } catch (err) {
+    console.error("Error loading article:", err);
+    if (loader) {
+      loader.innerHTML = `
                 <div style="color: var(--text-color); text-align: center;">
                     <h3>عذراً!</h3>
                     <p>${err.message}</p>
-                    <a href="${isPagesDir ? '../videos/' : 'videos/'}" class="btn" style="margin-top: 1rem;">العودة للفيديوهات</a>
+                    <a href="${isPagesDir ? "../videos/" : "videos/"}" class="btn" style="margin-top: 1rem;">العودة للفيديوهات</a>
                 </div>
             `;
-        }
     }
+  }
 }
 
 function scrollToPlayButton(event) {
-    if (event) event.stopPropagation();
-    
-    const playBtn = document.getElementById("game-play-btn");
-    if (!playBtn) return;
-    
-    // Smooth scroll to button
-    playBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // Add temporary animation class
-    playBtn.classList.add('pulse-once');
-    
-    // Remove class after animation completes (3 iterations of 0.5s = 1.5s)
-    setTimeout(() => {
-        playBtn.classList.remove('pulse-once');
-    }, 1500);
+  if (event) event.stopPropagation();
+
+  const playBtn = document.getElementById("game-play-btn");
+  if (!playBtn) return;
+
+  // Smooth scroll to button
+  playBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  // Add temporary animation class
+  playBtn.classList.add("pulse-once");
+
+  // Remove class after animation completes (3 iterations of 0.5s = 1.5s)
+  setTimeout(() => {
+    playBtn.classList.remove("pulse-once");
+  }, 1500);
 }
