@@ -45,23 +45,27 @@ function updateThemeIcon(theme) {
   }
 }
 
+// Theme toggle logic moved to setupThemeToggle
+/* End Dark Mode Logic */
+/* End Dark Mode Logic */
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Set initial icon state
+  // Set initial icon state immediately
   const currentTheme =
     document.documentElement.getAttribute("data-theme") || "light";
   updateThemeIcon(currentTheme);
 
-  // Add event listener to toggle button if it exists
-  const themeToggleBtn = document.getElementById("theme-toggle");
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", toggleTheme);
-  }
-});
-/* End Dark Mode Logic */
-
-document.addEventListener("DOMContentLoaded", () => {
   loadConfig();
 });
+
+function setupThemeToggle() {
+  const themeToggleBtn = document.getElementById("theme-toggle");
+  if (themeToggleBtn) {
+    // Remove old listener if exists to be safe, though a fresh element won't have one
+    themeToggleBtn.removeEventListener("click", toggleTheme);
+    themeToggleBtn.addEventListener("click", toggleTheme);
+  }
+}
 
 function updateMetaTags(title, description, keywords, image) {
   // Update Title
@@ -167,10 +171,16 @@ async function loadConfig() {
       updateMetaTags(pageTitle, pageDesc, pageKeywords, pageImage);
     }
 
+    // Inject Header first so Nav can be populated
+    generateHeader(isPagesDir);
+
     populateContent(data, isPagesDir);
     generateNav(data.nav, isPagesDir);
     generateHomeNav(data.nav);
     generateFooter(isPagesDir);
+
+    // Setup Theme Toggle Listener AFTER header is injected
+    setupThemeToggle();
 
     // Check for Videos Page (matches both /videos/ and videos.html for backward compat)
     if (
@@ -392,6 +402,86 @@ function generateHomeNav(navItems) {
 
     container.appendChild(a);
   }
+  if (videosItem) {
+    const a = document.createElement("a");
+    a.href = videosItem.url;
+
+    // Apply styling and animation class directly
+    a.className = "btn videos-btn-animate";
+    a.style.width = "100%";
+    a.style.display = "block";
+    a.style.textAlign = "center";
+
+    // Add text and icon
+    a.innerHTML = `${videosItem.text} <i class="fas fa-gamepad" style="margin-right: 0.5rem;"></i>`;
+
+    container.appendChild(a);
+  }
+}
+
+function generateHeader(isPagesDir) {
+  // Check if header already exists to avoid duplicates
+  if (document.querySelector("nav.navbar")) return;
+
+  // Exclude Redirect Page from having a header
+  if (window.location.pathname.includes("/redirect/")) return;
+
+  const nav = document.createElement("nav");
+  nav.className = "navbar";
+
+  const container = document.createElement("div");
+  container.className = "container";
+
+  // Logo Section
+  const logoWrapper = document.createElement("div");
+  logoWrapper.className = "logo-wrapper";
+  logoWrapper.style.display = "flex";
+  logoWrapper.style.alignItems = "center";
+  logoWrapper.style.gap = "1rem";
+
+  const logoDiv = document.createElement("div");
+  logoDiv.className = "logo";
+  logoDiv.textContent = "رحومي - Rahumi";
+
+  const themeBtn = document.createElement("button");
+  themeBtn.id = "theme-toggle";
+  themeBtn.className = "btn";
+  themeBtn.style.padding = "0.5rem 1rem";
+  themeBtn.style.color = "white";
+  themeBtn.setAttribute("aria-label", "تبديل المظهر");
+
+  const themeIcon = document.createElement("i");
+  themeIcon.id = "theme-icon";
+  themeIcon.className = "fas fa-moon"; // Default, updated by setupThemeToggle/updateThemeIcon
+
+  themeBtn.appendChild(themeIcon);
+  logoWrapper.appendChild(logoDiv);
+  logoWrapper.appendChild(themeBtn);
+
+  // Nav List
+  const ul = document.createElement("ul");
+  ul.className = "nav-links";
+  ul.id = "nav-list";
+
+  // Menu Toggle (Hamburger) - Semantic Button
+  const menuToggle = document.createElement("button");
+  menuToggle.className = "menu-toggle";
+  menuToggle.textContent = "☰";
+  menuToggle.setAttribute("aria-label", "القائمة");
+  // Reset button styles to match previous look
+  menuToggle.style.background = "none";
+  menuToggle.style.border = "none";
+  menuToggle.style.color = "inherit";
+  menuToggle.style.padding = "0";
+  menuToggle.style.font = "inherit";
+
+  container.appendChild(logoWrapper);
+  container.appendChild(ul);
+  container.appendChild(menuToggle);
+  nav.appendChild(container);
+
+  // Prepend to body
+  document.body.insertBefore(nav, document.body.firstChild);
 }
 
 function generateFooter(isPagesDir) {
