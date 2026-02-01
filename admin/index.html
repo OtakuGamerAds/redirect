@@ -1743,17 +1743,14 @@
         // Rebuild current channel's data from DOM order
         const newMaps = [];
         mapsList.querySelectorAll(".map-card").forEach((card) => {
-          const content = card.querySelector(".map-card-content");
-          const links = content.querySelectorAll(".links a");
-
-          // Retrieve stored data attached to the card
+          // Retrieve stored data attached to the card - this is the correct source
           const existingData = card.dataset.mapData
             ? JSON.parse(card.dataset.mapData)
             : {};
 
           newMaps.push({
-            video_link: links[0].href,
-            map_link: links[1].href,
+            video_link: existingData.video_link || "",
+            map_link: existingData.map_link || "",
             article_content: existingData.article_content || "",
           });
         });
