@@ -171,17 +171,30 @@ const TitleUtils = (function () {
   }
 
   /**
-   * Fetches video title via noembed
+   * Fetches video title via YouTube oEmbed
    */
   async function fetchVideoTitle(videoUrl) {
     if (!videoUrl) return null;
+
+    // Check if we already have a cached result for this EXACT url
+    // Note: We might want to invalidate cache if it was "Loading..." but here we store final titles
     if (videoTitleCache[videoUrl]) return videoTitleCache[videoUrl];
 
     try {
-      const response = await fetch(
-        `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`,
-      );
-      if (!response.ok) throw new Error("Network response was not ok");
+      // Use YouTube's official oEmbed endpoint
+      // Add a timestamp to bypass browser/CDN caching of previous "404" or "private" responses
+      const cacheBuster = new Date().getTime();
+      const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json&t=${cacheBuster}`;
+
+      const response = await fetch(oembedUrl);
+
+      if (!response.ok) {
+        // If 401/403/404, it might be private or deleted.
+        // We can throw or just return null.
+        // If it was private and is now public, the cache buster should help us get the 200 OK.
+        throw new Error(`oEmbed failed with status ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.title) {
         videoTitleCache[videoUrl] = data.title;
@@ -189,6 +202,21 @@ const TitleUtils = (function () {
       }
     } catch (error) {
       console.warn("Failed to fetch video title for:", videoUrl, error);
+
+      // Fallback: Try noembed as a backup (sometimes useful if official endpoint is quirky,
+      // though usually official is better for "just turned public" scenarios)
+      try {
+        const response = await fetch(
+          `https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}&t=${new Date().getTime()}`,
+        );
+        const data = await response.json();
+        if (data.title) {
+          videoTitleCache[videoUrl] = data.title;
+          return data.title;
+        }
+      } catch (e) {
+        // ignore fallback error
+      }
     }
     return null;
   }
