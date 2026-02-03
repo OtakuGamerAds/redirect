@@ -407,7 +407,7 @@ function generateHomeNav(navItems) {
     a.style.textAlign = "center";
 
     // Add text and icon
-    a.innerHTML = `${videosItem.text} <img src="https://www.google.com/s2/favicons?domain=roblox.com&sz=128" alt="Roblox" style="width: 1.5em; height: 1.5em; vertical-align: middle; margin-right: 0.5rem;">`;
+    a.innerHTML = `${videosItem.text} <i class="fas fa-gamepad" style="margin-right: 0.5rem;"></i>`;
 
     container.appendChild(a);
   }
