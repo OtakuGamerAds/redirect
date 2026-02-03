@@ -1,3 +1,4 @@
+// Deployment Timestamp: 2026-02-03T16:08:00
 /* Dark Mode Logic */
 function initTheme() {
   const savedTheme = localStorage.getItem("theme");
@@ -407,7 +408,7 @@ function generateHomeNav(navItems) {
     a.style.textAlign = "center";
 
     // Add text and icon
-    a.innerHTML = `${videosItem.text} <i class="fas fa-gamepad" style="margin-right: 0.5rem;"></i>`;
+    a.innerHTML = `${videosItem.text} <img src="https://www.google.com/s2/favicons?domain=roblox.com&sz=128" alt="Roblox" style="width: 1.5em; height: 1.5em; vertical-align: middle; margin-right: 0.5rem;">`;
 
     container.appendChild(a);
   }
