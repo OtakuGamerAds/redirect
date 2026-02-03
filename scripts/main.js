@@ -1038,6 +1038,38 @@ async function loadArticlePage(isPagesDir) {
           );
 
           contentDiv.innerHTML = parsedHtml;
+
+          // Inject AdSense Content Ad after the first paragraph
+          const contentAdHtml = `
+            <div class="ad-container">
+                <!-- Rahumi_Article_Content -->
+                <ins class="adsbygoogle"
+                     style="display:block; text-align:center; width: 100%;"
+                     data-ad-layout="in-article"
+                     data-ad-format="fluid"
+                     data-ad-client="ca-pub-8358436770172802"
+                     data-ad-slot="1099682727"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+          `;
+
+          // Find the first paragraph closing tag
+          const pCloseIndex = contentDiv.innerHTML.indexOf("</p>");
+          if (pCloseIndex !== -1) {
+            // Insert after the first </p>
+            const insertionPoint = pCloseIndex + 4;
+            const newHtml =
+              contentDiv.innerHTML.slice(0, insertionPoint) +
+              contentAdHtml +
+              contentDiv.innerHTML.slice(insertionPoint);
+            contentDiv.innerHTML = newHtml;
+          } else {
+            // If no paragraph found (rare), append to top or bottom? Let's append to top of content as fallback
+            contentDiv.innerHTML = contentAdHtml + contentDiv.innerHTML;
+          }
+
           contentDiv.style.display = "block";
 
           // Update hooks when API returns
