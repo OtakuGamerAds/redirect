@@ -16,6 +16,15 @@ function initTheme() {
 // Initialize theme immediately
 initTheme();
 
+// URL Cleanup: Clean index.html from URL
+if (window.location.pathname.endsWith("index.html")) {
+  const newPath = window.location.pathname.substring(
+    0,
+    window.location.pathname.lastIndexOf("index.html"),
+  );
+  window.history.replaceState(null, "", newPath);
+}
+
 // Listen for system preference changes
 window
   .matchMedia("(prefers-color-scheme: dark)")
@@ -427,7 +436,7 @@ function generateHeader(isPagesDir) {
   const logoDiv = document.createElement("a");
   logoDiv.className = "logo";
   logoDiv.textContent = "رحومي - Rahumi";
-  logoDiv.href = isPagesDir ? "../index.html" : "index.html";
+  logoDiv.href = isPagesDir ? "../" : "./";
   logoDiv.style.textDecoration = "none";
   logoDiv.style.color = "var(--primary-color)"; // Ensure color is maintained
 
