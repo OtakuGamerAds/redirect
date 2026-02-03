@@ -1024,12 +1024,17 @@ async function loadArticlePage(isPagesDir) {
           // This ensures the span is not escaped by the markdown parser.
           parsedHtml = parsedHtml.replace(
             /\$\{GAME_NAME\}/g,
-            `
-                        <span class="dynamic-game-name youtuber-badge" style="cursor: pointer; text-decoration: none;" onclick="scrollToPlayButton(event)">
-                            <i class="fas fa-gamepad" style="margin-left:5px;"></i>
-                            <span class="game-name-text">جاري تحميل اسم اللعبة...</span>
-                        </span>
-                    `,
+            TitleUtils.createBadgeHtml({
+              tag: "span",
+              className: "dynamic-game-name youtuber-badge",
+              style: "cursor: pointer; text-decoration: none;",
+              onclick: "scrollToPlayButton(event)",
+              iconImage: "https://www.google.com/s2/favicons?domain=roblox.com",
+              iconStyle:
+                "width: 16px; height: 16px; margin-left: 5px; vertical-align: middle;", // Adjust alignment
+              text: "جاري تحميل اسم اللعبة...",
+              textClass: "game-name-text",
+            }),
           );
 
           contentDiv.innerHTML = parsedHtml;
