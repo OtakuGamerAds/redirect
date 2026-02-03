@@ -49,6 +49,90 @@ const TitleUtils = (function () {
     return match ? match[1] : null;
   }
 
+  function createBadgeHtml({
+    tag = "span",
+    href = null,
+    className = "youtuber-badge",
+    extraClasses = "",
+    dataAttributes = {},
+    onclick = "",
+    style = "",
+    iconClass = "fas fa-gamepad",
+    iconColor = "", // e.g. '#ff0000'
+    iconImage = "", // URL for image icon
+    iconStyle = "",
+    text = "",
+    textClass = "",
+    target = "",
+  }) {
+    const el = document.createElement(tag);
+    el.className = `${className} ${extraClasses}`.trim();
+
+    if (href && tag === "a") {
+      el.href = href;
+    }
+
+    if (target && tag === "a") {
+      el.target = target;
+    }
+
+    if (onclick) {
+      el.setAttribute("onclick", onclick);
+    }
+
+    if (style) {
+      el.setAttribute("style", style);
+    }
+
+    // Add data attributes
+    Object.keys(dataAttributes).forEach((key) => {
+      el.dataset[key] = dataAttributes[key];
+    });
+
+    let combinedIconStyle = iconStyle;
+    if (iconColor) {
+      combinedIconStyle += ` color: ${iconColor};`;
+    }
+
+    let innerStyles = combinedIconStyle
+      ? ` style="${combinedIconStyle.trim()}"`
+      : "";
+
+    let iconHtml = "";
+    if (iconImage) {
+      iconHtml = `<img src="${iconImage}" alt=""${innerStyles}>`;
+    } else if (iconClass) {
+      iconHtml = `<i class="${iconClass}"${innerStyles}></i>`;
+    }
+
+    // For spacing after icon if it exists
+    // If we have explicit margin style, we might not want the space?
+    // The original code had `margin-left:5px` AND likely a space in HTML (newline/indentation).
+    // But `margin-left` in RTL handles the spacing.
+    // I'll keep the space as it acts as a safe fallback, web browsers collapse multiple spaces/margins reasonably well for this case usually.
+    // Actually, `<i ...></i> <span>` vs `<i ...></i><span>`
+    // The original was:
+    // <i ...></i>
+    // <span ...>
+    // That implies whitespace (newline) which renders as a space.
+    if (iconHtml) {
+      iconHtml += " ";
+    }
+
+    // Wrap text if class provided
+    let textHtml = text;
+    if (textClass) {
+      textHtml = `<span class="${textClass}">${text}</span>`;
+    } else {
+      textHtml = `<span>${text}</span>`;
+    }
+
+    el.innerHTML = `${iconHtml}${textHtml}`;
+
+    // Return outerHTML
+    return el.outerHTML;
+  }
+
   /**
    * Cleans a title (removes Roblox keywords) and replaces @handles with badges hurdles
    */
@@ -78,10 +162,18 @@ const TitleUtils = (function () {
     const regex = /@([a-zA-Z0-9_.-]+)/g;
 
     return cleaned.replace(regex, (match, handle) => {
-      return `<a href="https://www.youtube.com/@${handle}" target="_blank" class="youtuber-badge pending-badge" data-handle="${handle}" onclick="event.stopPropagation();">
-                    <i class="fab fa-youtube" style="margin-left:5px; color: #ff0000;"></i>
-                    <span>${handle}</span>
-                </a>`;
+      return createBadgeHtml({
+        tag: "a",
+        href: `https://www.youtube.com/@${handle}`,
+        target: "_blank",
+        extraClasses: "pending-badge",
+        dataAttributes: { handle: handle },
+        onclick: "event.stopPropagation();",
+        iconClass: "fab fa-youtube",
+        iconColor: "#ff0000",
+        iconStyle: "margin-left:5px;",
+        text: handle,
+      });
     });
   }
 
@@ -231,6 +323,7 @@ const TitleUtils = (function () {
     updateBadgeUI,
     processBadges,
     fetchVideoTitle,
+    createBadgeHtml,
   };
 })();
 
