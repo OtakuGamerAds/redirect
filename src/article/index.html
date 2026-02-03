@@ -119,6 +119,20 @@
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 8px 25px rgba(46, 204, 113, 0.6);
         }
+
+        /* Ad Container Styling */
+        .ad-container {
+            width: 100%;
+            margin: 2rem 0;
+            text-align: center;
+            overflow: hidden; /* Prevent overflow on small screens */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px; /* Prevent cumulative layout shift (CLS) to some extent */
+            background-color: var(--surface-color-secondary, transparent); /* Optional subtle bg */
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -131,6 +145,20 @@
 
         <div id="article-view" style="display: none;">
             <div class="article-container">
+                <!-- Rahumi_Article_Top -->
+                <div class="ad-container">
+                    <!-- Rahumi_Article_Top -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-8358436770172802"
+                         data-ad-slot="5884670776"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+
                 <!-- Video Section -->
                 <div class="video-wrapper">
                     <iframe id="video-embed" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -143,9 +171,36 @@
                     </a>
                 </div>
 
+                <!-- Rahumi_Article_Video -->
+                <div class="ad-container">
+                    <!-- Rahumi_Article_Video -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-8358436770172802"
+                         data-ad-slot="7617097413"
+                         data-ad-format="auto"
+                         data-full-width-responsive="true"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+
                 <!-- Article Content -->
                 <div id="article-content" class="article-content">
                     <!-- Markdown will be rendered here -->
+                </div>
+
+                <!-- Rahumi_Article_Bottom -->
+                <div class="ad-container">
+                    <!-- Rahumi_Article_Bottom -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-format="autorelaxed"
+                         data-ad-client="ca-pub-8358436770172802"
+                         data-ad-slot="8383384179"></ins>
+                    <script>
+                         (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
                 </div>
             </div>
         </div>
