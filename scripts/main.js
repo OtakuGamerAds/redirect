@@ -16,6 +16,15 @@ function initTheme() {
 // Initialize theme immediately
 initTheme();
 
+// URL Cleanup: Clean index.html from URL
+if (window.location.pathname.endsWith("index.html")) {
+  const newPath = window.location.pathname.substring(
+    0,
+    window.location.pathname.lastIndexOf("index.html"),
+  );
+  window.history.replaceState(null, "", newPath);
+}
+
 // Listen for system preference changes
 window
   .matchMedia("(prefers-color-scheme: dark)")
@@ -398,7 +407,7 @@ function generateHomeNav(navItems) {
     a.style.textAlign = "center";
 
     // Add text and icon
-    a.innerHTML = `${videosItem.text} <i class="fas fa-gamepad" style="margin-right: 0.5rem;"></i>`;
+    a.innerHTML = `${videosItem.text} <img src="https://www.roblox.com/favicon.ico" alt="Roblox" style="width: 1.25em; height: 1.25em; vertical-align: bottom; margin-right: 0.5rem;">`;
 
     container.appendChild(a);
   }
@@ -427,7 +436,7 @@ function generateHeader(isPagesDir) {
   const logoDiv = document.createElement("a");
   logoDiv.className = "logo";
   logoDiv.textContent = "رحومي - Rahumi";
-  logoDiv.href = isPagesDir ? "../index.html" : "index.html";
+  logoDiv.href = isPagesDir ? "../" : "./";
   logoDiv.style.textDecoration = "none";
   logoDiv.style.color = "var(--primary-color)"; // Ensure color is maintained
 
@@ -1026,7 +1035,7 @@ async function loadArticlePage(isPagesDir) {
             /\$\{GAME_NAME\}/g,
             `
                         <span class="dynamic-game-name youtuber-badge" style="cursor: pointer; text-decoration: none;" onclick="scrollToPlayButton(event)">
-                            <i class="fas fa-gamepad" style="margin-left:5px;"></i>
+                            <img src="https://www.roblox.com/favicon.ico" alt="Roblox" style="width: 1em; height: 1em; vertical-align: middle; margin-left: 5px;">
                             <span class="game-name-text">جاري تحميل اسم اللعبة...</span>
                         </span>
                     `,
