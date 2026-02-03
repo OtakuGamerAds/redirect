@@ -4,14 +4,21 @@
     <!-- Consent Mode Default -->
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('consent', 'default', {
-        'ad_storage': 'denied',
-        'ad_user_data': 'denied',
-        'ad_personalization': 'denied',
-        'analytics_storage': 'denied'
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("consent", "default", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: "denied",
       });
     </script>
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8358436770172802"
+      crossorigin="anonymous"
+    ></script>
     <!-- Google tag (gtag.js) -->
     <script
       async
@@ -43,8 +50,6 @@
     />
   </head>
   <body>
-
-
     <main
       class="container text-center"
       style="
@@ -109,6 +114,6 @@
 
     <script src="scripts/title-utils.js?v=00e9b0e1"></script>
     <script src="scripts/main.js?v=9fe4ec96" defer></script>
-      <script src="scripts/consent.js"></script>
-</body>
+    <script src="scripts/consent.js"></script>
+  </body>
 </html>
