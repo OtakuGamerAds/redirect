@@ -123,15 +123,33 @@
         /* Ad Container Styling */
         .ad-container {
             width: 100%;
-            margin: 2rem 0;
+            margin: 0; /* Collapsed by default */
             text-align: center;
-            overflow: hidden; /* Prevent overflow on small screens */
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100px; /* Prevent cumulative layout shift (CLS) to some extent */
-            background-color: var(--surface-color-secondary, transparent); /* Optional subtle bg */
+            min-height: 0; /* Collapsed by default */
+            background-color: transparent; /* Transparent by default */
             border-radius: 8px;
+            transition: margin 0.3s ease; /* Smooth transition when ad loads */
+        }
+
+        /* Show margin only when ad is filled */
+        .ad-container:has(ins.adsbygoogle[data-ad-status="filled"]) {
+            margin: 2rem 0;
+            min-height: 100px; /* Restore min-height only when we know there is an ad */
+            background-color: var(--surface-color-secondary, transparent);
+        }
+
+        /* Hide unfilled ads explicitly (redundant safety) */
+        ins.adsbygoogle[data-ad-status="unfilled"] {
+            display: none !important;
+        }
+
+        /* Hide the container if the ad inside is unfilled */
+        .ad-container:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
+            display: none !important;
         }
     </style>
 </head>
