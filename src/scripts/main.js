@@ -1039,38 +1039,47 @@ async function loadArticlePage(isPagesDir) {
 
           contentDiv.innerHTML = parsedHtml;
 
-          // Inject AdSense Content Ad after the first paragraph
-          const contentAdHtml = `
-            <div class="ad-container">
-                <!-- Rahumi_Article_Content -->
-                <ins class="adsbygoogle"
-                     style="display:block; text-align:center; width: 100%;"
-                     data-ad-layout="in-article"
-                     data-ad-format="fluid"
-                     data-ad-client="ca-pub-8358436770172802"
-                     data-ad-slot="1099682727"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
-          `;
-
-          // Find the first paragraph closing tag
+          // --- DYNAMIC AD INJECTION ---
+          // 1. Insert In-Article Container after first paragraph
           const pCloseIndex = contentDiv.innerHTML.indexOf("</p>");
+          let contentAdContainerId = "ad-content-inner";
+
           if (pCloseIndex !== -1) {
-            // Insert after the first </p>
             const insertionPoint = pCloseIndex + 4;
-            const newHtml =
+            const containerHtml =
+              '<div id="ad-content-inner" class="ad-container" style="margin: 2rem 0;"></div>';
+            contentDiv.innerHTML =
               contentDiv.innerHTML.slice(0, insertionPoint) +
-              contentAdHtml +
+              containerHtml +
               contentDiv.innerHTML.slice(insertionPoint);
-            contentDiv.innerHTML = newHtml;
           } else {
-            // If no paragraph found (rare), append to top or bottom? Let's append to top of content as fallback
-            contentDiv.innerHTML = contentAdHtml + contentDiv.innerHTML;
+            // Fallback: Append to top if no paragraph found
+            contentAdContainerId = "ad-content-fallback";
+            contentDiv.innerHTML =
+              `<div id="${contentAdContainerId}" class="ad-container" style="margin-bottom: 2rem;"></div>` +
+              contentDiv.innerHTML;
           }
 
           contentDiv.style.display = "block";
+
+          // 2. Inject Ads using helper (Real IDs)
+          // Using setTimeout to let the DOM settle, though synchronous call handles it fine usually
+          setTimeout(() => {
+            // Top Banner
+            injectAd("ad-top", "5884670776", null, "auto", true);
+            // Video Banner
+            injectAd("ad-video", "7617097413", null, "auto", true);
+            // In-Article (Inside content)
+            injectAd(
+              contentAdContainerId,
+              "1099682727",
+              "in-article",
+              "fluid",
+              false,
+            );
+            // Bottom Multiplex
+            injectAd("ad-bottom", "8383384179", null, "autorelaxed", false);
+          }, 50);
 
           // Update hooks when API returns
           gameNamePromise.then((name) => {
@@ -1169,4 +1178,47 @@ function scrollToPlayButton(event) {
   setTimeout(() => {
     playBtn.classList.remove("pulse-once");
   }, 1500);
+}
+
+/**
+ * Helper to dynamically inject AdSense units
+ * Prevents "ads on empty screens" by ensuring control over when they appear.
+ * @param {string} containerId - ID of the container element
+ * @param {string} slotId - AdSense Data Ad Slot ID
+ * @param {string|null} layout - Optional layout type (e.g., 'in-article')
+ * @param {string|null} format - Ad format (e.g., 'auto', 'fluid', 'autorelaxed')
+ * @param {boolean} fullWidth - Whether to enable full width responsive
+ */
+function injectAd(containerId, slotId, layout, format, fullWidth) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // Check if already injected to prevent duplicates
+  if (container.querySelector("ins.adsbygoogle")) return;
+
+  // Clear existing content
+  container.innerHTML = "";
+
+  const ins = document.createElement("ins");
+  ins.className = "adsbygoogle";
+  ins.style.display = "block";
+  ins.setAttribute("data-ad-client", "ca-pub-8358436770172802");
+  ins.setAttribute("data-ad-slot", slotId);
+
+  if (layout) ins.setAttribute("data-ad-layout", layout);
+  if (format) ins.setAttribute("data-ad-format", format);
+  if (fullWidth) ins.setAttribute("data-full-width-responsive", "true");
+
+  if (layout === "in-article") {
+    ins.style.textAlign = "center";
+  }
+
+  container.appendChild(ins);
+
+  // Trigger AdSense
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  } catch (e) {
+    console.warn("AdSense push failed (adblock maybe?):", e);
+  }
 }
