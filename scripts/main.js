@@ -323,7 +323,12 @@ function generateNav(navItems, isPagesDir) {
 
     // Adjust URL based on current depth
     let finalUrl = item.url;
-    if (isPagesDir) {
+    if (window.__shortArticleNumber) {
+      // Short URL context: always use absolute paths
+      if (!item.url.startsWith("http")) {
+        finalUrl = "/" + item.url;
+      }
+    } else if (isPagesDir) {
       // If we are in a subdir, we need to go up one level for everything
       // except if the url is meant to be absolute (http) which is not the case for nav items usually
       if (!item.url.startsWith("http")) {
@@ -485,7 +490,8 @@ function generateFooter(isPagesDir) {
   const footer = document.createElement("footer");
   footer.className = "site-footer";
 
-  const prefix = isPagesDir ? "../" : "";
+  let prefix = isPagesDir ? "../" : "";
+  if (window.__shortArticleNumber) prefix = "/";
   const date = new Date().getFullYear();
 
   footer.innerHTML = `
