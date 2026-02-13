@@ -1080,23 +1080,59 @@ async function loadArticlePage(isPagesDir) {
 
           contentDiv.style.display = "block";
 
-          // 2. Inject Ads using helper (Real IDs)
-          // Using setTimeout to let the DOM settle, though synchronous call handles it fine usually
-          setTimeout(() => {
-            // Top Banner
-            injectAd("ad-top", "5884670776", null, "auto", true);
-            // Video Banner
-            injectAd("ad-video", "7617097413", null, "auto", true);
-            // In-Article (Inside content)
-            injectAd(
-              contentAdContainerId,
-              "1099682727",
-              "in-article",
-              "fluid",
-              false,
+          // 2. Dynamically create ad containers and inject ads
+          // Ad containers are no longer in static HTML — they are created here
+          // only after content is confirmed present (AdSense compliance).
+          const articleContainer = contentDiv.closest(".article-container");
+          if (articleContainer) {
+            // Create ad-top before video wrapper
+            const videoWrapper =
+              articleContainer.querySelector(".video-wrapper");
+            if (videoWrapper && !document.getElementById("ad-top")) {
+              const adTop = document.createElement("div");
+              adTop.id = "ad-top";
+              adTop.className = "ad-container";
+              articleContainer.insertBefore(adTop, videoWrapper);
+            }
+
+            // Create ad-video after play button
+            const playContainer = articleContainer.querySelector(
+              ".play-button-container",
             );
-            // Bottom Multiplex
-            injectAd("ad-bottom", "8383384179", null, "autorelaxed", false);
+            if (playContainer && !document.getElementById("ad-video")) {
+              const adVideo = document.createElement("div");
+              adVideo.id = "ad-video";
+              adVideo.className = "ad-container";
+              playContainer.insertAdjacentElement("afterend", adVideo);
+            }
+
+            // Create ad-bottom after article content
+            if (!document.getElementById("ad-bottom")) {
+              const adBottom = document.createElement("div");
+              adBottom.id = "ad-bottom";
+              adBottom.className = "ad-container";
+              articleContainer.appendChild(adBottom);
+            }
+          }
+
+          // Load AdSense script dynamically, then inject ad units
+          setTimeout(() => {
+            loadAdSenseScript().then(() => {
+              // Top Banner
+              injectAd("ad-top", "5884670776", null, "auto", true);
+              // Video Banner
+              injectAd("ad-video", "7617097413", null, "auto", true);
+              // In-Article (Inside content)
+              injectAd(
+                contentAdContainerId,
+                "1099682727",
+                "in-article",
+                "fluid",
+                false,
+              );
+              // Bottom Multiplex
+              injectAd("ad-bottom", "8383384179", null, "autorelaxed", false);
+            });
           }, 50);
 
           // Update hooks when API returns
@@ -1196,6 +1232,33 @@ function scrollToPlayButton(event) {
   setTimeout(() => {
     playBtn.classList.remove("pulse-once");
   }, 1500);
+}
+
+/**
+ * Dynamically load the AdSense script. Only loads once.
+ * Called after article content is confirmed present to avoid
+ * loading ads on empty/error screens (AdSense policy compliance).
+ * @returns {Promise} Resolves when the script is loaded
+ */
+let adSensePromise = null;
+function loadAdSenseScript() {
+  if (adSensePromise) return adSensePromise;
+  adSensePromise = new Promise((resolve) => {
+    // Check if already loaded
+    if (document.querySelector('script[src*="adsbygoogle.js"]')) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.async = true;
+    script.src =
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8358436770172802";
+    script.crossOrigin = "anonymous";
+    script.onload = () => resolve();
+    script.onerror = () => resolve(); // Resolve anyway (adblock)
+    document.head.appendChild(script);
+  });
+  return adSensePromise;
 }
 
 /**
