@@ -122,8 +122,6 @@ function updateMetaTags(title, description, keywords, image) {
   }
 }
 
-let enableRedirection = true; // Default
-
 async function loadConfig() {
   try {
     // Determine path to config based on current location
@@ -150,11 +148,6 @@ async function loadConfig() {
     const response = await fetch(configPath);
     if (!response.ok) throw new Error("Failed to load config");
     const data = await response.json();
-
-    // Read feature flag
-    if (typeof data.enable_redirect_feature !== "undefined") {
-      enableRedirection = data.enable_redirect_feature;
-    }
 
     if (data.collaborators) {
       window.siteCollaborators = data.collaborators;
@@ -419,9 +412,6 @@ function generateHeader(isPagesDir) {
   // Check if header already exists to avoid duplicates
   if (document.querySelector("nav.navbar")) return;
 
-  // Exclude Redirect Page from having a header
-  if (window.location.pathname.includes("/redirect/")) return;
-
   const nav = document.createElement("nav");
   nav.className = "navbar";
 
@@ -677,13 +667,12 @@ function createMapCard(item) {
       // Check if we are in a subdirectory (like /videos/)
       // Foolproof check: explicitly check path segments
       const path = window.location.pathname;
-      // If we are in /videos/, /about/, /contact/, /article/, /redirect/
+      // If we are in /videos/, /about/, /contact/, /article/
       const isPagesDir =
         path.includes("/videos/") ||
         path.includes("/about/") ||
         path.includes("/contact/") ||
-        path.includes("/article/") ||
-        path.includes("/redirect/");
+        path.includes("/article/");
 
       // Use short URL if article number exists, otherwise fallback to traditional URL
       if (item.n) {
@@ -1012,19 +1001,12 @@ async function loadArticlePage(isPagesDir) {
 
     // Setup Play Button
     const playBtn = document.getElementById("game-play-btn");
-    let redirectPrefix = isPagesDir ? "../" : "";
-    if (window.__shortArticleNumber) redirectPrefix = "/";
-    if (enableRedirection) {
-      playBtn.href = `${redirectPrefix}redirect/?id=${id}`;
-    } else {
-      playBtn.href = item.map_link;
-    }
+    playBtn.href = item.map_link;
 
     // Analytics Tracking
     playBtn.addEventListener("click", () => {
       if (typeof gtag === "function") {
         gtag("event", "play_game", {
-          redirect_enabled: enableRedirection,
           destination_url: playBtn.href,
         });
       }
