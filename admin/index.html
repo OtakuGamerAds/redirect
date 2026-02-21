@@ -1487,11 +1487,27 @@
 
         const mapLink = document.getElementById("add-map-link").value;
 
-        const newMap = {
-          video_link: videoLink,
-          map_link: mapLink,
-          article_content: document.getElementById("add-article-content").value,
-        };
+        let newMap = {};
+        if (editingItemCard) {
+          // Preserve existing properties like 'n'
+          newMap = JSON.parse(editingItemCard.dataset.mapData);
+        } else {
+          // Calculate next available 'n' for completely new items
+          let maxN = 0;
+          for (const channel in allChannelsData) {
+            const links = allChannelsData[channel].links || [];
+            for (const link of links) {
+              if (link.n && link.n > maxN) {
+                maxN = link.n;
+              }
+            }
+          }
+          newMap.n = maxN + 1;
+        }
+
+        newMap.video_link = videoLink;
+        newMap.map_link = mapLink;
+        newMap.article_content = document.getElementById("add-article-content").value;
 
         if (editingItemCard) {
           // EDIT MODE: Update existing card
